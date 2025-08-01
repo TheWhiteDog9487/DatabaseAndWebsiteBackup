@@ -31,6 +31,7 @@
 - 协程
 - 生成sha256以供验证数据完整性
 - 将备份内容同步至Cloudflare R2
+- **注册为systemd服务（重要）**
 
 什么时候做啊，没个准数呢  
 可能什么时候会更新，也有可能什么时候提桶跑路了ㄟ(≧◇≦)ㄏ
@@ -40,3 +41,7 @@
 
 # 许可证
 WTFPL
+
+# 碎碎念
+[Copilot](https://copilot.github.com/)太好用了  
+我+Copilot+Copilot Edit就这么一路把这东西给莽了出来
