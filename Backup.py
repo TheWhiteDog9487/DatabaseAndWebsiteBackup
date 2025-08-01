@@ -154,7 +154,7 @@ logging.info(f"Zip文件大小：{humanize.naturalsize(os.path.getsize(ArchiveZi
 ZipEndTime = time()
 logging.info(f"打包耗时：{humanize.precisedelta(ZipEndTime - ZipStartTime)}")
 
-def LogDirectoryTree(RootDirectory, Prefix=""):
+def LogDirectoryTree(RootDirectory: str, Prefix: str= ""):
     Entries = sorted(os.listdir(RootDirectory))
     for Index, Entry in enumerate(Entries):
         Path = os.path.join(RootDirectory, Entry)
