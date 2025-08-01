@@ -13,6 +13,7 @@ import os
 import logging
 import shutil
 from time import time
+import hashlib
 
 import humanize
 
@@ -28,6 +29,7 @@ WebsiteZipFileName: str = "WebsiteRoot.zip"
 BackupRootDirectory: str = "Backup"
 BackupDirectorySizeLimit: int = 10 * 1024 * 1024 * 1024  # 10 GiB
 ArchiveZipFileName = f"{CurrentTime}.zip"
+ChecksumFileName: str = "sha256.txt"
 
 logging.basicConfig(
     level=logging.INFO,
@@ -139,6 +141,20 @@ logging.info(f"网站根目录备份已保存：{WebsiteZipFileName}")
 logging.info(f"网站根目录备份文件大小：{humanize.naturalsize(os.path.getsize(WebsiteZipFileName))}")
 WebsiteStageEnd = time()
 logging.info(f"网站根目录备份耗时：{humanize.precisedelta(WebsiteStageEnd - WebsiteStageStart)}")
+
+logging.info("开始计算备份文件的SHA256校验和。")
+HashStageStart = time()
+with open(ChecksumFileName, "tw+") as ChecksumFile:
+    Files = [FileName for FileName in os.listdir(".") if FileName.endswith((".sql", ".zip"))]
+    for FileName in Files:
+        SHA256 = hashlib.sha256()
+        with open(FileName, "rb") as DataFile:
+            SHA256.update(DataFile.read())
+        ChecksumFile.write(f"{FileName}: {SHA256.hexdigest()}\n")
+HashStageEnd = time()
+logging.info("备份文件的SHA256校验和计算完成。")
+logging.info(f"SHA256校验和已保存：{ChecksumFileName}")
+logging.info(f"SHA256校验和计算耗时：{humanize.precisedelta(HashStageEnd - HashStageStart)}")
 
 TotalEndTime = time()
 logging.info("备份完成时间。")
