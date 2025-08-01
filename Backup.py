@@ -55,20 +55,21 @@ if os.path.exists(BackupRootDirectory) == False:
     logging.info(f"备份根目录 {BackupRootDirectory} 不存在，正在创建。")
     os.mkdir(BackupRootDirectory)
 else:
+    logging.info(f"备份目录体积限制：{humanize.naturalsize(BackupDirectorySizeLimit)}")
     while True:
-        TotalSize = GetDirectorySize(BackupRootDirectory)
-        logging.info(f"当前备份目录体积：{humanize.naturalsize(TotalSize)}")
-        logging.info(f"备份目录体积限制：{humanize.naturalsize(BackupDirectorySizeLimit)}")
+        TotalSize, TotalSizeHumanize = GetDirectorySize(BackupRootDirectory)
+        logging.info(f"当前备份目录体积：{TotalSizeHumanize}")
         if TotalSize <= BackupDirectorySizeLimit:
+            logging.info("备份目录体积在限制范围内，备份继续。")
             break
-        SubDirectories = [Directory for Directory in os.listdir(BackupRootDirectory) if os.path.isdir(os.path.join(BackupRootDirectory, Directory))]
-        if not SubDirectories:
+        Files = [File for File in os.listdir(BackupRootDirectory) if os.path.isfile(os.path.join(BackupRootDirectory, File))]
+        if len(Files) == 0:
             break
-        SubDirectories.sort()
-        Oldest = SubDirectories[0]
+        Files.sort()
+        Oldest = Files[0]
         OldestPath = os.path.join(BackupRootDirectory, Oldest)
-        logging.warning(f"备份目录已超出体积限制，正在删除最旧的备份：{OldestPath}")
-        shutil.rmtree(OldestPath)
+        logging.warning(f"备份目录已超出体积限制，正在删除最旧的备份：{OldestPath}，文件大小：{humanize.naturalsize(os.path.getsize(OldestPath))}")
+        os.remove(OldestPath)
 os.chdir(BackupRootDirectory)
 
 os.mkdir(CurrentTime)
