@@ -39,14 +39,14 @@ logging.info(f"PostgreSQL保存命令：{PostgreSQLDumpCommand}")
 logging.info(f"网站根目录：{WebsiteLocation}")
 logging.info(f"当前时间：{CurrentTime}")
 
-def GetDirectorySize(Path: str) -> int:
+def GetDirectorySize(Path: str) -> tuple[int, str]:
     Total = 0
     for DirectoryPath, DirectoryNames, FileNames in os.walk(Path):
         for File in FileNames:
             FilePath = os.path.join(DirectoryPath, File)
             if os.path.isfile(FilePath):
                 Total += os.path.getsize(FilePath)
-    return Total
+    return Total, humanize.naturalsize(Total)
 
 TotalStartTime = time()
 logging.info("备份开始。")
