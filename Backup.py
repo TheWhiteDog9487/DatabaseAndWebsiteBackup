@@ -126,7 +126,7 @@ if(len(os.listdir(".")) == 0):
     os.rmdir(CurrentTime)
 
 WebsiteStageStart = time()
-logging.info("网站根目录备份开始。")
+logging.info("开始网站根目录备份。")
 logging.info(f"正在备份网站根目录：{WebsiteLocation}")
 
 def ZipDirectoryTree(ZipFileName: str, TargetDirectory: str):
