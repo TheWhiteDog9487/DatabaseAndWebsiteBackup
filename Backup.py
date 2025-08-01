@@ -16,6 +16,7 @@ from time import time
 
 import humanize
 
+CurrentTime: str = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 MySQLDumpCommand: list[str] = ["mysqldump", "-A"]
 MySQLDumpedFileName: str = "MySQL.sql"
 MySQLDumpErrorLogFileName: str = "MySQLError.log"
@@ -23,9 +24,11 @@ PostgreSQLDumpCommand: list[str] = ["pg_dumpall"]
 PostgreSQLDumpedFileName: str = "PostgreSQL.sql"
 PostgreSQLDumpErrorLogFileName: str = "PostgreSQLError.log"
 WebsiteLocation: str = "/var/www"
+WebsiteZipFileName: str = "WebsiteRoot.zip"
 BackupRootDirectory: str = "Backup"
 BackupDirectorySizeLimit: int = 10 * 1024 * 1024 * 1024  # 10 GiB
-CurrentTime: str = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+ArchiveZipFileName = f"{CurrentTime}.zip"
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -155,7 +158,7 @@ with zipfile.ZipFile(ZipFileName, "w") as BackupZipFile:
                 compress_type=zipfile.ZIP_DEFLATED,
                 compresslevel=0 if FileName.endswith(".zip") else 6)
 logging.info("备份文件夹已经打包完成。")
-logging.info(f"Zip文件大小：{humanize.naturalsize(os.path.getsize(ZipFileName))}")
+logging.info(f"Zip文件大小：{humanize.naturalsize(os.path.getsize(ArchiveZipFileName))}")
 ZipEndTime = time()
 logging.info(f"打包耗时：{humanize.precisedelta(ZipEndTime - ZipStartTime)}")
 
