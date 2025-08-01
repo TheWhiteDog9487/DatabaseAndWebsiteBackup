@@ -125,17 +125,19 @@ if(len(os.listdir(".")) == 0):
 
 WebsiteStageStart = time()
 logging.info("网站根目录备份开始。")
-
 logging.info(f"正在备份网站根目录：{WebsiteLocation}")
-with zipfile.ZipFile("WebsiteRoot.zip", "w", compression=zipfile.ZIP_DEFLATED) as ZipFile:
-    for FolderName, SubFolders, FileNames in os.walk(WebsiteLocation):
-        for FileName in FileNames:
-            ZipFile.write(os.path.join(FolderName, FileName), arcname=os.path.relpath(os.path.join(FolderName, FileName), WebsiteLocation), compresslevel= 0 if FileName.endswith((".mp4", ".mkv", ".zip", ".tar.gz")) else 6)
-logging.info(f"网站根目录备份已保存：WebsiteRoot.zip")
-logging.info(f"网站根目录备份文件大小：{humanize.naturalsize(os.path.getsize('WebsiteRoot.zip'))}")
 
+def ZipDirectoryTree(ZipFileName: str, TargetDirectory: str):
+    with zipfile.ZipFile(ZipFileName, "w", compression=zipfile.ZIP_DEFLATED) as ZipFile:
+            for FolderName, SubFolders, FileNames in os.walk(TargetDirectory):
+                for FileName in FileNames:
+                    ZipFile.write(os.path.join(FolderName, FileName), arcname=os.path.relpath(os.path.join(FolderName, FileName), TargetDirectory), compresslevel= 0 if FileName.endswith((".mp4", ".mkv", ".zip", ".tar.gz")) else 6)
+
+ZipDirectoryTree(WebsiteZipFileName, WebsiteLocation)
+logging.info("网站根目录备份已完成。")
+logging.info(f"网站根目录备份已保存：{WebsiteZipFileName}")
+logging.info(f"网站根目录备份文件大小：{humanize.naturalsize(os.path.getsize(WebsiteZipFileName))}")
 WebsiteStageEnd = time()
-logging.info("网站根目录备份完成。")
 logging.info(f"网站根目录备份耗时：{humanize.precisedelta(WebsiteStageEnd - WebsiteStageStart)}")
 
 TotalEndTime = time()
@@ -145,19 +147,8 @@ logging.info("所有备份操作已完成。")
 
 os.chdir("..")
 ZipStartTime = time()
-ZipFileName = f"{CurrentTime}.zip"
-logging.info(f"开始打包备份文件夹为：{ZipFileName}")
-
-with zipfile.ZipFile(ZipFileName, "w") as BackupZipFile:
-    for FolderName, SubFolders, FileNames in os.walk(CurrentTime):
-        for FileName in FileNames:
-            FilePath = os.path.join(FolderName, FileName)
-            ArchiveName = os.path.relpath(FilePath, CurrentTime)
-            BackupZipFile.write(
-                FilePath,
-                arcname=ArchiveName,
-                compress_type=zipfile.ZIP_DEFLATED,
-                compresslevel=0 if FileName.endswith(".zip") else 6)
+logging.info(f"开始打包备份文件夹为：{ArchiveZipFileName}")
+ZipDirectoryTree(ArchiveZipFileName, CurrentTime)
 logging.info("备份文件夹已经打包完成。")
 logging.info(f"Zip文件大小：{humanize.naturalsize(os.path.getsize(ArchiveZipFileName))}")
 ZipEndTime = time()
