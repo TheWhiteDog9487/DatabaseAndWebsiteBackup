@@ -1,11 +1,7 @@
-# /// script
-# requires-python = ">=3.13"
-# dependencies = [
-#     "humanize>=4.12.3",
-# ]
-# ///
-
-from datetime import datetime
+import hashlib
+import logging
+import os
+import shutil
 import subprocess
 import sys
 import zipfile

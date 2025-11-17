@@ -1,0 +1,180 @@
+version = 1
+revision = 3
+requires-python = ">=3.14"
+
+[[package]]
+name = "boto3"
+version = "1.40.74"
+source = { registry = "https://mirrors.cernet.edu.cn/pypi/web/simple" }
+dependencies = [
+    { name = "botocore" },
+    { name = "jmespath" },
+    { name = "s3transfer" },
+]
+sdist = { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/a2/37/0db5fc46548b347255310893f1a47971a1d8eb0dbc46dfb5ace8a1e7d45e/boto3-1.40.74.tar.gz", hash = "sha256:484e46bf394b03a7c31b34f90945ebe1390cb1e2ac61980d128a9079beac87d4" }
+wheels = [
+    { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/d2/08/c52751748762901c0ca3c3019e3aa950010217f0fdf9940ebe68e6bb2f5a/boto3-1.40.74-py3-none-any.whl", hash = "sha256:41fc8844b37ae27b24bcabf8369769df246cc12c09453988d0696ad06d6aa9ef" },
+]
+
+[[package]]
+name = "boto3-stubs"
+version = "1.40.53"
+source = { registry = "https://mirrors.cernet.edu.cn/pypi/web/simple" }
+dependencies = [
+    { name = "botocore-stubs" },
+    { name = "types-s3transfer" },
+]
+sdist = { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/cb/12/f8233045332ecdbaa483fb70e0990836903b281f31034b4a216254c13bbf/boto3_stubs-1.40.53.tar.gz", hash = "sha256:2dbb49642124a0815d271dde96b9d24cd4a908c96bb7be3cdc631b53169a2d92" }
+wheels = [
+    { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/e3/1c/5d4e0f66d3b743b7c42ae0db4db586e02f13eb55271e3ea588ffdf973390/boto3_stubs-1.40.53-py3-none-any.whl", hash = "sha256:2239af9c47940f05f6e03f6d392f5044ae77c75d05895bae770737d0ad4e2afe" },
+]
+
+[[package]]
+name = "botocore"
+version = "1.40.74"
+source = { registry = "https://mirrors.cernet.edu.cn/pypi/web/simple" }
+dependencies = [
+    { name = "jmespath" },
+    { name = "python-dateutil" },
+    { name = "urllib3" },
+]
+sdist = { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/81/dc/0412505f05286f282a75bb0c650e525ddcfaf3f6f1a05cd8e99d32a2db06/botocore-1.40.74.tar.gz", hash = "sha256:57de0b9ffeada06015b3c7e5186c77d0692b210d9e5efa294f3214df97e2f8ee" }
+wheels = [
+    { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/7d/a2/306dec16e3c84f3ca7aaead0084358c1c7fbe6501f6160844cbc93bc871e/botocore-1.40.74-py3-none-any.whl", hash = "sha256:f39f5763e35e75f0bd91212b7b36120b1536203e8003cd952ef527db79702b15" },
+]
+
+[[package]]
+name = "botocore-stubs"
+version = "1.40.74"
+source = { registry = "https://mirrors.cernet.edu.cn/pypi/web/simple" }
+dependencies = [
+    { name = "types-awscrt" },
+]
+sdist = { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/ab/53/6b3b57c76accd83d387c70a15c786cfbbbb6aa9c7b057900e931c13ccdd9/botocore_stubs-1.40.74.tar.gz", hash = "sha256:088b259c4500127ecc33d4cdea785d50e0035b2456a794eaa82ce52cb3871107" }
+wheels = [
+    { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/5e/e0/4bfaa72002bbe7befb96e8af8e56e7398b58ef981941577818b1a671e7f7/botocore_stubs-1.40.74-py3-none-any.whl", hash = "sha256:4c215592a8c26f66e0af773b513f1a34437da2a6d0f53a04928bbba1b131c935" },
+]
+
+[[package]]
+name = "databaseandwebsitebackup"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "boto3" },
+    { name = "boto3-stubs" },
+    { name = "humanize" },
+    { name = "types-boto3", extra = ["s3"] },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "boto3", specifier = ">=1.40.9" },
+    { name = "boto3-stubs", specifier = "==1.40.53" },
+    { name = "humanize", specifier = ">=4.12.3" },
+    { name = "types-boto3", extras = ["s3"], specifier = ">=1.40.54" },
+]
+
+[[package]]
+name = "humanize"
+version = "4.14.0"
+source = { registry = "https://mirrors.cernet.edu.cn/pypi/web/simple" }
+sdist = { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/b6/43/50033d25ad96a7f3845f40999b4778f753c3901a11808a584fed7c00d9f5/humanize-4.14.0.tar.gz", hash = "sha256:2fa092705ea640d605c435b1ca82b2866a1b601cdf96f076d70b79a855eba90d" }
+wheels = [
+    { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/c3/5b/9512c5fb6c8218332b530f13500c6ff5f3ce3342f35e0dd7be9ac3856fd3/humanize-4.14.0-py3-none-any.whl", hash = "sha256:d57701248d040ad456092820e6fde56c930f17749956ac47f4f655c0c547bfff" },
+]
+
+[[package]]
+name = "jmespath"
+version = "1.0.1"
+source = { registry = "https://mirrors.cernet.edu.cn/pypi/web/simple" }
+sdist = { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/00/2a/e867e8531cf3e36b41201936b7fa7ba7b5702dbef42922193f05c8976cd6/jmespath-1.0.1.tar.gz", hash = "sha256:90261b206d6defd58fdd5e85f478bf633a2901798906be2ad389150c5c60edbe" }
+wheels = [
+    { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/31/b4/b9b800c45527aadd64d5b442f9b932b00648617eb5d63d2c7a6587b7cafc/jmespath-1.0.1-py3-none-any.whl", hash = "sha256:02e2e4cc71b5bcab88332eebf907519190dd9e6e82107fa7f83b1003a6252980" },
+]
+
+[[package]]
+name = "python-dateutil"
+version = "2.9.0.post0"
+source = { registry = "https://mirrors.cernet.edu.cn/pypi/web/simple" }
+dependencies = [
+    { name = "six" },
+]
+sdist = { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/66/c0/0c8b6ad9f17a802ee498c46e004a0eb49bc148f2fd230864601a86dcf6db/python-dateutil-2.9.0.post0.tar.gz", hash = "sha256:37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3" }
+wheels = [
+    { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/ec/57/56b9bcc3c9c6a792fcbaf139543cee77261f3651ca9da0c93f5c1221264b/python_dateutil-2.9.0.post0-py2.py3-none-any.whl", hash = "sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427" },
+]
+
+[[package]]
+name = "s3transfer"
+version = "0.14.0"
+source = { registry = "https://mirrors.cernet.edu.cn/pypi/web/simple" }
+dependencies = [
+    { name = "botocore" },
+]
+sdist = { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/62/74/8d69dcb7a9efe8baa2046891735e5dfe433ad558ae23d9e3c14c633d1d58/s3transfer-0.14.0.tar.gz", hash = "sha256:eff12264e7c8b4985074ccce27a3b38a485bb7f7422cc8046fee9be4983e4125" }
+wheels = [
+    { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/48/f0/ae7ca09223a81a1d890b2557186ea015f6e0502e9b8cb8e1813f1d8cfa4e/s3transfer-0.14.0-py3-none-any.whl", hash = "sha256:ea3b790c7077558ed1f02a3072fb3cb992bbbd253392f4b6e9e8976941c7d456" },
+]
+
+[[package]]
+name = "six"
+version = "1.17.0"
+source = { registry = "https://mirrors.cernet.edu.cn/pypi/web/simple" }
+sdist = { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/94/e7/b2c673351809dca68a0e064b6af791aa332cf192da575fd474ed7d6f16a2/six-1.17.0.tar.gz", hash = "sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81" }
+wheels = [
+    { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl", hash = "sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274" },
+]
+
+[[package]]
+name = "types-awscrt"
+version = "0.28.4"
+source = { registry = "https://mirrors.cernet.edu.cn/pypi/web/simple" }
+sdist = { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/f7/6f/d4f2adb086e8f5cd2ae83cf8dbb192057d8b5025120e5b372468292db67f/types_awscrt-0.28.4.tar.gz", hash = "sha256:15929da84802f27019ee8e4484fb1c102e1f6d4cf22eb48688c34a5a86d02eb6" }
+wheels = [
+    { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/5e/ae/9acc4adf1d5d7bb7d09b6f9ff5d4d04a72eb64700d104106dd517665cd57/types_awscrt-0.28.4-py3-none-any.whl", hash = "sha256:2d453f9e27583fcc333771b69a5255a5a4e2c52f86e70f65f3c5a6789d3443d0" },
+]
+
+[[package]]
+name = "types-boto3"
+version = "1.40.74"
+source = { registry = "https://mirrors.cernet.edu.cn/pypi/web/simple" }
+dependencies = [
+    { name = "botocore-stubs" },
+    { name = "types-s3transfer" },
+]
+sdist = { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/9d/1b/0b48896a935c705d36a34c79defe7ef80a6a56d167e84eb0e40fa2fbe909/types_boto3-1.40.74.tar.gz", hash = "sha256:4792265e32a207cad6cd1ffea10a56164441beb1201d528f6b06bdb673b324bf" }
+wheels = [
+    { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/98/0d/49e6618fddaa21741fa8ce0350aeea6ac2b35e7571e9796b0f49077db9df/types_boto3-1.40.74-py3-none-any.whl", hash = "sha256:ab8baab1826dcb5dae7931b582e01157573380a259e5ff8d3a91115870604909" },
+]
+
+[package.optional-dependencies]
+s3 = [
+    { name = "types-boto3-s3" },
+]
+
+[[package]]
+name = "types-boto3-s3"
+version = "1.40.67"
+source = { registry = "https://mirrors.cernet.edu.cn/pypi/web/simple" }
+sdist = { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/da/2e/c5cce9e36323cfe81890ccd6dab62215848a32c471f4ae1b0b2d0e4af397/types_boto3_s3-1.40.67.tar.gz", hash = "sha256:b1f11ad1b9be497dbb01b215e546bfcabd1d492b27648baba3d5306c7355ea52" }
+wheels = [
+    { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/72/d7/048fd8dbf5467cd8c92126e966d2245018f2ae2d765431a5f2c2dcb58540/types_boto3_s3-1.40.67-py3-none-any.whl", hash = "sha256:5d08942d8937e10746bee4fd368da52c726c43619d96dd1e08aeb11d8c3e4a59" },
+]
+
+[[package]]
+name = "types-s3transfer"
+version = "0.14.0"
+source = { registry = "https://mirrors.cernet.edu.cn/pypi/web/simple" }
+sdist = { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/8e/9b/8913198b7fc700acc1dcb84827137bb2922052e43dde0f4fb0ed2dc6f118/types_s3transfer-0.14.0.tar.gz", hash = "sha256:17f800a87c7eafab0434e9d87452c809c290ae906c2024c24261c564479e9c95" }
+wheels = [
+    { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/92/c3/4dfb2e87c15ca582b7d956dfb7e549de1d005c758eb9a305e934e1b83fda/types_s3transfer-0.14.0-py3-none-any.whl", hash = "sha256:108134854069a38b048e9b710b9b35904d22a9d0f37e4e1889c2e6b58e5b3253" },
+]
+
+[[package]]
+name = "urllib3"
+version = "2.5.0"
+source = { registry = "https://mirrors.cernet.edu.cn/pypi/web/simple" }
+sdist = { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/15/22/9ee70a2574a4f4599c47dd506532914ce044817c7752a79b6a51286319bc/urllib3-2.5.0.tar.gz", hash = "sha256:3fc47733c7e419d4bc3f6b3dc2b4f890bb743906a30d56ba4a5bfa4bbff92760" }
+wheels = [
+    { url = "https://mirrors.sustech.edu.cn/pypi/web/packages/a7/c2/fe1e52489ae3122415c51f387e221dd0773709bad6c6cdaa599e8a2c5185/urllib3-2.5.0-py3-none-any.whl", hash = "sha256:e6b01673c0fa6a13e374b50871808eb3bf7046c4b125b216f6bf1cc604cff0dc" },
+]
