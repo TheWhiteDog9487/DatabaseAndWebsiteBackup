@@ -10,24 +10,24 @@ from types_boto3_s3 import S3Client
 from ProcessTimer import MeasureExecutionTime
 
 try:
-    R2_Endpoint = sys.argv[sys.argv.index("R2_Endpoint") + 1]
+    R2_Endpoint = os.getenv("R2_Endpoint")
 except ValueError:
     print("R2_Endpoint not provided. Please provide it as a command line argument.")
     sys.exit(1)
 try:
-    R2_Access_Key = sys.argv[sys.argv.index("R2_Access_Key") + 1]
+    R2_Access_Key = os.getenv("R2_Access_Key")
 except ValueError:
-    print("R2_Access_Key not provided. Please provide it as a command line argument.")
+    print("R2_Access_Key not provided. Please provide it as a environment variable.")
     sys.exit(1)
 try:
-    R2_Secret_Key = sys.argv[sys.argv.index("R2_Secret_Key") + 1]
+    R2_Secret_Key = os.getenv("R2_Secret_Key")
 except ValueError:
-    print("R2_Secret_Key not provided. Please provide it as a command line argument.")
+    print("R2_Secret_Key not provided. Please provide it as a environment variable.")
     sys.exit(1)
 try:
-    R2_Bucket_Name = sys.argv[sys.argv.index("R2_Bucket_Name") + 1]
+    R2_Bucket_Name = os.getenv("R2_Bucket_Name")
 except ValueError:
-    print("R2_Bucket_Name not provided. Please provide it as a command line argument.")
+    print("R2_Bucket_Name not provided. Please provide it as a environment variable.")
     sys.exit(1)
 
 S3: S3Client = boto3.client(
