@@ -1,7 +1,8 @@
 import os
+from pathlib import Path
 import humanize
 
-def GetDirectorySize(Path: str) -> tuple[int, str]:
+def GetDirectorySize(Path: Path) -> tuple[int, str]:
     Total = 0
     for DirectoryPath, DirectoryNames, FileNames in os.walk(Path):
         for File in FileNames:
