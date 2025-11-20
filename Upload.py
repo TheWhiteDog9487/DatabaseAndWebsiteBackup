@@ -46,8 +46,8 @@ def GetBucketTotalSize() -> tuple[int, str]:
     Total_Size = 0
     if AllObjectsInBucket is None:
         AllObjectsInBucket = S3.list_objects_v2(Bucket=R2_Bucket_Name) # type: ignore
-        for Object in AllObjectsInBucket["Contents"]: # type: ignore
-            Total_Size += Object["Size"] # type: ignore
+    for Object in AllObjectsInBucket["Contents"]: # type: ignore
+        Total_Size += Object["Size"] # type: ignore
     Size_Humanize = humanize.naturalsize(Total_Size)
     return Total_Size, Size_Humanize
 
@@ -62,6 +62,9 @@ def OptimizeStorage(FileSize: int):
     while FileSize + GetBucketTotalSize()[0] > R2_Free_Space:
         DeleteFileName, DeleteFileLastModifiedDate = ObjectNameToLastModifiedDict.popitem()
         S3.delete_object(Bucket=R2_Bucket_Name, Key=DeleteFileName) # type: ignore
+        AllObjectsInBucket["Contents"] = [ # type: ignore
+            Object for Object in AllObjectsInBucket["Contents"] # type: ignore
+            if Object.get("Key") != DeleteFileName ]
         logging.warning("存储空间不足，已删除最旧的备份文件：{0}，最后修改时间：{1}。".format(DeleteFileName, DeleteFileLastModifiedDate.strftime("%Y-%m-%d %H:%M:%S")))
 
 @MeasureExecutionTime("上传备份文件")
