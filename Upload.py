@@ -11,24 +11,20 @@ from types_boto3_s3.type_defs import ListObjectsV2OutputTypeDef
 
 from ProcessTimer import MeasureExecutionTime
 
-try:
-    R2_Endpoint = os.getenv("R2_Endpoint")
-except ValueError:
+R2_Endpoint = os.getenv("R2_Endpoint")
+if R2_Endpoint is None:
     print("R2_Endpoint not provided. Please provide it as a command line argument.")
     sys.exit(1)
-try:
-    R2_Access_Key = os.getenv("R2_Access_Key")
-except ValueError:
+R2_Access_Key = os.getenv("R2_Access_Key")
+if R2_Access_Key is None:
     print("R2_Access_Key not provided. Please provide it as a environment variable.")
     sys.exit(1)
-try:
-    R2_Secret_Key = os.getenv("R2_Secret_Key")
-except ValueError:
+R2_Secret_Key = os.getenv("R2_Secret_Key")
+if R2_Secret_Key is None:
     print("R2_Secret_Key not provided. Please provide it as a environment variable.")
     sys.exit(1)
-try:
-    R2_Bucket_Name = os.getenv("R2_Bucket_Name")
-except ValueError:
+R2_Bucket_Name = os.getenv("R2_Bucket_Name")
+if R2_Bucket_Name is None:
     print("R2_Bucket_Name not provided. Please provide it as a environment variable.")
     sys.exit(1)
 
