@@ -12,7 +12,7 @@ from ProcessTimer import MeasureExecutionTime
 
 
 def ZipDirectoryTree(ZipFileName: str, TargetDirectory: str):
-    with zipfile.ZipFile(ZipFileName, "w", compression=zipfile.ZIP_DEFLATED) as ZipFile:
+    with zipfile.ZipFile(ZipFileName, "w", zipfile.ZIP_ZSTANDARD) as ZipFile:
         for FolderName, SubFolders, FileNames in os.walk(TargetDirectory):
             for FileName in FileNames:
                 ZipFile.write(os.path.join(FolderName, FileName), arcname=os.path.relpath(os.path.join(FolderName, FileName), TargetDirectory), compresslevel= 0 if FileName.endswith((".mp4", ".mkv", ".zip", ".tar.gz")) else 6)
