@@ -6,7 +6,7 @@ from datetime import datetime
 
 import humanize
 
-from Backup import BackupCertbot, BackupCustomPath, BackupDatabase, BackupWebsite, GenerateSHA256Checksum, LogDirectoryTree, PackAllFiles
+from Backup import BackupCertbot, BackupCustomPath, BackupDatabase, BackupWebsite, GenerateSHA256Checksum, LogDirectoryTree, PackAllFiles, ZipWorker
 from PrepareBackup import GetDirectorySize
 from Upload import GetBucketTotalSize, UploadFile
 
@@ -66,21 +66,17 @@ os.chdir(CurrentTime)
 logging.info("开始数据库备份。")
 BackupDatabase(MySQLDumpCommand, MySQLDumpedFileName, MySQLDumpErrorLogFileName, "MySQL")
 BackupDatabase(PostgreSQLDumpCommand, PostgreSQLDumpedFileName, PostgreSQLDumpErrorLogFileName, "PostgreSQL", "postgres")
-logging.info("数据库备份完成。")
 
-logging.info(f"正在备份网站根目录：{WebsiteLocation}")
+logging.info(f"开始备份网站根目录：{WebsiteLocation}")
 BackupWebsite(WebsiteLocation, WebsiteZipFileName)
-logging.info(f"网站根目录备份已保存：{WebsiteZipFileName}")
-logging.info(f"网站根目录备份文件大小：{humanize.naturalsize(os.path.getsize(WebsiteZipFileName))}")
 
-logging.info(f"正在备份Certbot目录：{CertbotLocation}")
+logging.info(f"开始备份Certbot目录：{CertbotLocation}")
 BackupCertbot(CertbotLocation, CertbotZipFileName)
-logging.info(f"Certbot目录备份已保存：{CertbotZipFileName}")
-logging.info(f"Certbot目录备份文件大小：{humanize.naturalsize(os.path.getsize(CertbotZipFileName))}")
 
 logging.info("开始备份自定义路径。")
 BackupCustomPath(BackupRootDirectory.parent / CustomPathListFileName)
-logging.info("自定义路径备份完成。")
+
+ZipWorker.shutdown(wait=True)
 
 logging.info("开始计算备份文件的SHA256校验和。")
 GenerateSHA256Checksum(ChecksumFileName)

@@ -1,3 +1,4 @@
+from concurrent.futures import ProcessPoolExecutor
 import hashlib
 import logging
 import os
@@ -11,6 +12,7 @@ import humanize
 
 from ProcessTimer import MeasureExecutionTime
 
+ZipWorker = ProcessPoolExecutor()
 
 def ZipDirectoryTree(ZipFileName: str, TargetDirectory: Path):
     with zipfile.ZipFile(ZipFileName, "w", zipfile.ZIP_ZSTANDARD) as ZipFile:
@@ -59,14 +61,20 @@ def BackupDatabase(ShellCommand: list[str], OutputFileName: str, ErrorLogFileNam
     except FileNotFoundError as Exception:
         logging.error(f"由于可执行文件{ShellCommand[0]}不存在，故跳过对{DatabaseName}的备份。")
         logging.debug(f"异常信息：{Exception}")
+    finally:
+        logging.info(f"{DatabaseName}数据库备份操作已完成。")
 
 @MeasureExecutionTime(StageName="网站根目录备份")
 def BackupWebsite(WebsiteLocation: Path, WebsiteZipFileName: str):
-    ZipDirectoryTree(WebsiteZipFileName, WebsiteLocation)
+    ZipWorker.submit(ZipDirectoryTree, WebsiteZipFileName, WebsiteLocation)
+    logging.info(f"网站根目录备份已保存：{WebsiteZipFileName}")
+    logging.info(f"网站根目录备份文件大小：{humanize.naturalsize(os.path.getsize(WebsiteZipFileName))}")
 
 @MeasureExecutionTime(StageName="Certbot备份")
 def BackupCertbot(CertbotLocation: Path, CertbotZipFileName: str):
-    ZipDirectoryTree(CertbotZipFileName, CertbotLocation)
+    ZipWorker.submit(ZipDirectoryTree, CertbotZipFileName, CertbotLocation)
+    logging.info(f"Certbot目录备份已保存：{CertbotZipFileName}")
+    logging.info(f"Certbot目录备份文件大小：{humanize.naturalsize(os.path.getsize(CertbotZipFileName))}")
 
 @MeasureExecutionTime(StageName="计算SHA256校验和")
 def GenerateSHA256Checksum(ChecksumFileName: Path, Directory: Path = Path(".")):
@@ -92,16 +100,10 @@ def BackupCustomPath(PathListFile: Path):
             continue
         if BackupPath.is_file():
             logging.info(f"正在备份自定义文件：{BackupPath}")
-            shutil.copy(BackupPath, os.getcwd())
+            ZipWorker.submit(shutil.copy, BackupPath, os.getcwd())
         elif BackupPath.is_dir():
             logging.info(f"正在备份自定义目录：{BackupPath}")
-            ZipDirectoryTree(f"{os.path.basename(BackupPath)}.zst", BackupPath)
-        if os.path.isfile(Path):
-            logging.info(f"正在备份自定义文件：{Path}")
-            shutil.copyfile(Path, os.getcwd())
-        elif os.path.isdir(Path):
-            logging.info(f"正在备份自定义目录：{Path}")
-            ZipDirectoryTree(f"{os.path.basename(Path)}.zip", Path)
+            ZipWorker.submit(ZipDirectoryTree, f"{BackupPath}.zip", BackupPath)
 
 @MeasureExecutionTime(StageName="打包所有文件")
 def PackAllFiles(ZipFileName: str, Directory: Path):
