@@ -2,10 +2,12 @@ import datetime
 import logging
 import os
 import sys
+from typing import Optional
 
 import boto3
 import humanize
 from types_boto3_s3 import S3Client
+from types_boto3_s3.type_defs import ListObjectsV2OutputTypeDef
 
 from ProcessTimer import MeasureExecutionTime
 
@@ -35,27 +37,31 @@ S3: S3Client = boto3.client(
     aws_access_key_id=R2_Access_Key,
     aws_secret_access_key=R2_Secret_Key,
     endpoint_url=R2_Endpoint,
-    region_name="auto" )
-ObjectLastModifiedMap: dict[str, datetime.datetime] = {}
+    region_name="auto")
+AllObjectsInBucket: Optional[ListObjectsV2OutputTypeDef] = None
 R2_Free_Space = 10 * (1024 ** 3) # 10GB
 
 def GetBucketTotalSize() -> tuple[int, str]:
-    global ObjectLastModifiedMap
+    global AllObjectsInBucket
     Total_Size = 0
-    Response = S3.list_objects_v2(Bucket=R2_Bucket_Name or "")
-    for Object in Response.get("Contents", []) :
-        Total_Size += Object.get("Size") or 0
-        ObjectName = Object.get("Key") or ""
-        LastModified = Object.get("LastModified") or datetime.datetime.now()
-        ObjectLastModifiedMap[ObjectName] = LastModified
-    ObjectLastModifiedMap = { k: v for k, v in sorted(ObjectLastModifiedMap.items(), key=lambda item: item[1], reverse=True) }
+    if AllObjectsInBucket is None:
+        AllObjectsInBucket = S3.list_objects_v2(Bucket=R2_Bucket_Name) # type: ignore
+        for Object in AllObjectsInBucket["Contents"]: # type: ignore
+            Total_Size += Object["Size"] # type: ignore
     Size_Humanize = humanize.naturalsize(Total_Size)
     return Total_Size, Size_Humanize
 
 def OptimizeStorage(FileSize: int):
+    ObjectNameToLastModifiedDict = {
+        Name: LastModifiedDate
+        for Name, LastModifiedDate in sorted( (
+                ( Object.get("Key"), Object.get("LastModified") or datetime.datetime.now() )
+                for Object in AllObjectsInBucket["Contents"]), # type: ignore
+            key=lambda item: item[1],
+            reverse=True ) }
     while FileSize + GetBucketTotalSize()[0] > R2_Free_Space:
-        DeleteFileName, DeleteFileLastModifiedDate = ObjectLastModifiedMap.popitem()
-        S3.delete_object(Bucket=R2_Bucket_Name, Key=DeleteFileName)
+        DeleteFileName, DeleteFileLastModifiedDate = ObjectNameToLastModifiedDict.popitem()
+        S3.delete_object(Bucket=R2_Bucket_Name, Key=DeleteFileName) # type: ignore
         logging.warning("存储空间不足，已删除最旧的备份文件：{0}，最后修改时间：{1}。".format(DeleteFileName, DeleteFileLastModifiedDate.strftime("%Y-%m-%d %H:%M:%S")))
 
 @MeasureExecutionTime("上传备份文件")
