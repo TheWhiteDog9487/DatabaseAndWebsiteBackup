@@ -31,7 +31,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S')
-humanize.i18n.activate("zh_CN")
+humanize.i18n.activate("zh_CN") # type: ignore
 logging.info(f"MySQL保存命令：{MySQLDumpCommand}")
 logging.info(f"PostgreSQL保存命令：{PostgreSQLDumpCommand}")
 logging.info(f"网站根目录：{WebsiteLocation}")

@@ -42,7 +42,7 @@ R2_Free_Space = 10 * (1024 ** 3) # 10GB
 def GetBucketTotalSize() -> tuple[int, str]:
     global ObjectLastModifiedMap
     Total_Size = 0
-    Response = S3.list_objects_v2(Bucket=R2_Bucket_Name)
+    Response = S3.list_objects_v2(Bucket=R2_Bucket_Name or "")
     for Object in Response.get("Contents", []) :
         Total_Size += Object.get("Size") or 0
         ObjectName = Object.get("Key") or ""
@@ -64,7 +64,7 @@ def UploadFile(FilePath: str):
     FileSize = os.path.getsize(FilePath)
     OptimizeStorage(FileSize)
     S3.upload_file(FilePath, 
-                   R2_Bucket_Name, 
+                   R2_Bucket_Name or "", 
                    os.path.basename(FilePath), 
                    Callback= lambda TransferredBytes: 
                         print(f"已上传 {humanize.naturalsize(TransferredBytes)}") )
