@@ -24,8 +24,8 @@ CertbotZipFileName: str = "Certbot.zip"
 BackupRootDirectory: Path = Path("Backup").resolve()    
 BackupDirectorySizeLimit: int = 10 * 1024 * 1024 * 1024  # 10 GiB
 ArchiveZipFileName: str = f"{CurrentTime}.zip"
-ChecksumFileName: str = "sha256.txt"
-CustomPathListFileName: str = "CustomPathList.txt"
+ChecksumFileName: Path = Path("sha256.txt")
+CustomPathListFileName: Path = Path("CustomPathList.txt")
 
 logging.basicConfig(
     level=logging.INFO,

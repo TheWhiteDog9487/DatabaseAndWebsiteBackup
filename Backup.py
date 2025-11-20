@@ -65,11 +65,11 @@ def BackupWebsite(WebsiteLocation: Path, WebsiteZipFileName: str):
     ZipDirectoryTree(WebsiteZipFileName, WebsiteLocation)
 
 @MeasureExecutionTime(StageName="Certbot备份")
-def BackupCertbot(CertbotLocation: str, CertbotZipFileName: str):
+def BackupCertbot(CertbotLocation: Path, CertbotZipFileName: str):
     ZipDirectoryTree(CertbotZipFileName, CertbotLocation)
 
 @MeasureExecutionTime(StageName="计算SHA256校验和")
-def GenerateSHA256Checksum(ChecksumFileName: str, Directory: Path = Path(".")):
+def GenerateSHA256Checksum(ChecksumFileName: Path, Directory: Path = Path(".")):
     with open(ChecksumFileName, "tw+") as ChecksumFile:
         Files = [FileName for FileName in Directory.iterdir() if FileName.suffix in [".sql", ".zip"]]
         for FileName in Files:
