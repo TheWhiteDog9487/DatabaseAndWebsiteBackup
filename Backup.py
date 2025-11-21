@@ -42,26 +42,22 @@ def LogDirectoryTree(RootDirectory: Path, Prefix: str= ""):
 def BackupDatabase(ShellCommand: list[str], OutputFileName: str, ErrorLogFileName: str, DatabaseName: str, RunAsUser: str | None = None):
     logging.info(f"正在备份数据库：{DatabaseName}")
     try:
-        DatabaseDumpResult = subprocess.run(
-            args=ShellCommand,
-            capture_output=True,
-            user=RunAsUser)
-        if DatabaseDumpResult.returncode == 0:
-            logging.info(f"{DatabaseName}备份成功。")
-            logging.debug(f"{ShellCommand}的返回值：{DatabaseDumpResult.returncode}")
-            logging.debug(f"{ShellCommand}输出的StdOut：{DatabaseDumpResult.stdout}")
-            with open(OutputFileName, "bw+") as File:
-                File.write(DatabaseDumpResult.stdout)
-            logging.info(f"{DatabaseName}备份文件已保存：{OutputFileName}")
-            logging.info(f"{DatabaseName}备份文件大小：{humanize.naturalsize(os.path.getsize(OutputFileName))}")
-        else:
-            logging.error(f"{DatabaseName}备份失败。")
-            logging.debug(f"{ShellCommand}的返回值：{DatabaseDumpResult.returncode}")
-            logging.debug(f"{ShellCommand}输出的StdErr：{DatabaseDumpResult.stderr}")
-            logging.debug(f"{ShellCommand}输出的StdOut：{DatabaseDumpResult.stdout}")
-            with open(ErrorLogFileName, "bw+") as File:
-                File.write(DatabaseDumpResult.stderr)
-            logging.info(f"{DatabaseName}错误日志已保存：{ErrorLogFileName}")
+        with open(OutputFileName, "bw+") as OutputFile, open(ErrorLogFileName, "bw+") as ErrorLogFile:
+            DatabaseDumpResult = subprocess.run(
+                args=ShellCommand,
+                stdout=OutputFile,
+                stderr=ErrorLogFile,
+                user=RunAsUser)
+            if DatabaseDumpResult.returncode == 0:
+                logging.info(f"{DatabaseName}备份成功。")
+                logging.debug(f"{ShellCommand}的返回值：{DatabaseDumpResult.returncode}")
+                logging.info(f"{DatabaseName}备份文件已保存：{OutputFileName}")
+                logging.info(f"{DatabaseName}备份文件大小：{humanize.naturalsize(os.path.getsize(OutputFileName))}")
+            else:
+                logging.error(f"{DatabaseName}备份失败。")
+                logging.debug(f"{ShellCommand}的返回值：{DatabaseDumpResult.returncode}")
+                logging.debug(f"{ShellCommand}输出的StdErr：{ErrorLogFile.read().decode('utf-8')}")
+                logging.info(f"{DatabaseName}错误日志已保存：{ErrorLogFileName}")
     except FileNotFoundError as Exception:
         logging.error(f"由于可执行文件{ShellCommand[0]}不存在，故跳过对{DatabaseName}的备份。")
         logging.debug(f"异常信息：{Exception}")
