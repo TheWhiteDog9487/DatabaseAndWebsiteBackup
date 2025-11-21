@@ -32,6 +32,8 @@
 4. 运行脚本
     ```shell
     uv run Main.py
+    # 如果您需要备份PostgreSQL，请使用root执行上面的命令，或者使用下面的命令
+    sudo uv run Main.py
     ```
 
 # 未来（可能有的）更新
