@@ -14,8 +14,15 @@ from ProcessTimer import MeasureExecutionTime
 
 ZipWorker = ProcessPoolExecutor()
 
+try:
+    logging.info("您的Python版本支持ZStandard，将使用Zstandard算法进行压缩。")
+    Algorithms = zipfile.ZIP_ZSTANDARD
+except AttributeError:
+    logging.warning("当前Python版本不支持Zstandard算法，将使用Deflate算法进行压缩。")
+    Algorithms = zipfile.ZIP_DEFLATED
+
 def ZipDirectoryTree(ZipFileName: str, TargetDirectory: Path):
-    with zipfile.ZipFile(ZipFileName, "w", zipfile.ZIP_ZSTANDARD) as ZipFile:
+    with zipfile.ZipFile(ZipFileName, "w", Algorithms) as ZipFile:
         for FolderName, SubFolders, FileNames in os.walk(TargetDirectory):
             for FileName in FileNames:
                 FilePath = os.path.join(FolderName, FileName)
