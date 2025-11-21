@@ -111,7 +111,7 @@ def BackupCustomPath(PathListFile: Path):
             ZipWorker.submit(shutil.copy, BackupPath, os.getcwd())
         elif BackupPath.is_dir():
             logging.info(f"正在备份自定义目录：{BackupPath}")
-            ZipWorker.submit(ZipDirectoryTree, f"{BackupPath}.zip", BackupPath)
+            ZipWorker.submit(ZipDirectoryTree, f"{BackupPath.name}.zip", BackupPath)
 
 @MeasureExecutionTime(StageName="打包所有文件")
 def PackAllFiles(ZipFileName: str, Directory: Path):
