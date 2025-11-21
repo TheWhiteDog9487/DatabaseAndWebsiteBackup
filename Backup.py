@@ -65,6 +65,9 @@ def BackupDatabase(ShellCommand: list[str], OutputFileName: str, ErrorLogFileNam
     except FileNotFoundError as Exception:
         logging.error(f"由于可执行文件{ShellCommand[0]}不存在，故跳过对{DatabaseName}的备份。")
         logging.debug(f"异常信息：{Exception}")
+    except PermissionError as Exception:
+        logging.error(f"由于权限不足，故无法备份{DatabaseName}。请切换到root或使用sudo重试。")
+        logging.debug(f"异常信息：{Exception}")
     finally:
         logging.info(f"{DatabaseName}数据库备份操作已完成。")
 
