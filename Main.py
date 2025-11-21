@@ -55,7 +55,7 @@ else:
         if TotalSize <= BackupDirectorySizeLimit:
             logging.info("备份目录体积在限制范围内，备份继续。")
             break
-        Files = [File for File in os.listdir(BackupRootDirectory) if os.path.isfile(os.path.join(BackupRootDirectory, File))]
+        Files = [File.name for File in BackupRootDirectory.iterdir() if File.is_file()]
         if len(Files) == 0:
             break
         Files.sort()
