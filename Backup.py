@@ -38,7 +38,6 @@ def LogDirectoryTree(RootDirectory: Path, Prefix: str= ""):
             Extension = "    " if Index == len(Entries) - 1 else "│   "
             LogDirectoryTree(Entry, Prefix + Extension)
 
-@MeasureExecutionTime(StageName="数据库备份")
 def BackupDatabase(ShellCommand: list[str], OutputFileName: str, ErrorLogFileName: str, DatabaseName: str, RunAsUser: str | None = None):
     logging.info(f"正在备份数据库：{DatabaseName}")
     try:
@@ -67,15 +66,12 @@ def BackupDatabase(ShellCommand: list[str], OutputFileName: str, ErrorLogFileNam
     finally:
         logging.info(f"{DatabaseName}数据库备份操作已完成。")
 
-@MeasureExecutionTime(StageName="网站根目录备份")
 def BackupWebsite(WebsiteLocation: Path, WebsiteZipFileName: str):
     ZipWorker.submit(ZipDirectoryTree, WebsiteZipFileName, WebsiteLocation)
 
-@MeasureExecutionTime(StageName="Certbot备份")
 def BackupCertbot(CertbotLocation: Path, CertbotZipFileName: str):
     ZipWorker.submit(ZipDirectoryTree, CertbotZipFileName, CertbotLocation)
 
-@MeasureExecutionTime(StageName="计算SHA256校验和")
 def GenerateSHA256Checksum(ChecksumFileName: Path, Directory: Path = Path(".")):
     with open(ChecksumFileName, "tw+") as ChecksumFile:
         Files = [FileName for FileName in Directory.iterdir() if FileName.suffix in [".sql", ".zip"]]
@@ -86,7 +82,6 @@ def GenerateSHA256Checksum(ChecksumFileName: Path, Directory: Path = Path(".")):
                     SHA256.update(DataChunk)
             ChecksumFile.write(f"{FileName}: {SHA256.hexdigest()}\n")
 
-@MeasureExecutionTime(StageName="自定义路径备份件")
 def BackupCustomPath(PathListFile: Path):
     if PathListFile.exists() == False:
         logging.warning(f"自定义路径列表文件 {PathListFile} 不存在，跳过自定义路径备份。")
