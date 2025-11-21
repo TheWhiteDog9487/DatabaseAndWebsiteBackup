@@ -74,14 +74,10 @@ def BackupDatabase(ShellCommand: list[str], OutputFileName: str, ErrorLogFileNam
 @MeasureExecutionTime(StageName="网站根目录备份")
 def BackupWebsite(WebsiteLocation: Path, WebsiteZipFileName: str):
     ZipWorker.submit(ZipDirectoryTree, WebsiteZipFileName, WebsiteLocation)
-    logging.info(f"网站根目录备份已保存：{WebsiteZipFileName}")
-    logging.info(f"网站根目录备份文件大小：{humanize.naturalsize(os.path.getsize(WebsiteZipFileName))}")
 
 @MeasureExecutionTime(StageName="Certbot备份")
 def BackupCertbot(CertbotLocation: Path, CertbotZipFileName: str):
     ZipWorker.submit(ZipDirectoryTree, CertbotZipFileName, CertbotLocation)
-    logging.info(f"Certbot目录备份已保存：{CertbotZipFileName}")
-    logging.info(f"Certbot目录备份文件大小：{humanize.naturalsize(os.path.getsize(CertbotZipFileName))}")
 
 @MeasureExecutionTime(StageName="计算SHA256校验和")
 def GenerateSHA256Checksum(ChecksumFileName: Path, Directory: Path = Path(".")):

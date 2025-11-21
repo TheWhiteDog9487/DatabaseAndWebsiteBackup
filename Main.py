@@ -82,6 +82,10 @@ logging.info("开始备份自定义路径。")
 BackupCustomPath(BackupRootDirectory.parent / CustomPathListFileName)
 
 ZipWorker.shutdown(wait=True)
+logging.info(f"网站根目录备份已保存：{WebsiteZipFileName}")
+logging.info(f"网站根目录备份文件大小：{humanize.naturalsize(os.path.getsize(WebsiteZipFileName))}")
+logging.info(f"Certbot目录备份已保存：{CertbotZipFileName}")
+logging.info(f"Certbot目录备份文件大小：{humanize.naturalsize(os.path.getsize(CertbotZipFileName))}")
 
 logging.info("开始计算备份文件的SHA256校验和。")
 GenerateSHA256Checksum(ChecksumFileName)
