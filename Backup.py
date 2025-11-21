@@ -12,6 +12,7 @@ import humanize
 from ProcessTimer import MeasureExecutionTime
 
 ZipWorker = ProcessPoolExecutor()
+DontCompressFileExtensions = (".mp4", ".mkv", ".zip", "tar.gz")
 
 try:
     logging.info("您的Python版本支持ZStandard，将使用Zstandard算法进行压缩。")
@@ -25,7 +26,7 @@ def ZipDirectoryTree(ZipFileName: str, TargetDirectory: Path):
         for FolderName, SubFolders, FileNames in os.walk(TargetDirectory):
             for FileName in FileNames:
                 FilePath = os.path.join(FolderName, FileName)
-                CompressLevel = 0 if FileName.endswith( (".mp4", ".mkv", ".zip", "tar.gz") ) else 6
+                CompressLevel = 0 if FileName.endswith( DontCompressFileExtensions ) else 6
                 ZipFile.write(FilePath, arcname=os.path.relpath(FilePath, TargetDirectory), compresslevel=CompressLevel)                    
 
 def LogDirectoryTree(RootDirectory: Path, Prefix: str= ""):
