@@ -90,7 +90,8 @@ def GenerateSHA256Checksum(ChecksumFileName: Path, Directory: Path = Path(".")):
         for FileName in Files:
             SHA256 = hashlib.sha256()
             with open(FileName, "rb") as DataFile:
-                SHA256.update(DataFile.read())
+                while DataChunk := DataFile.read(65536):
+                    SHA256.update(DataChunk)
             ChecksumFile.write(f"{FileName}: {SHA256.hexdigest()}\n")
 
 @MeasureExecutionTime(StageName="自定义路径备份件")
