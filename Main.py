@@ -9,7 +9,7 @@ import humanize
 
 from Backup import BackupCertbot, BackupCustomPath, BackupDatabase, BackupWebsite, GenerateSHA256Checksum, LogDirectoryTree, PackAllFiles, ZipWorker
 from PrepareBackup import GetDirectorySize
-from Upload import GetBucketTotalSize, UploadFile
+from Upload import GetBucketTotalSize, R2_Access_Key, R2_Bucket_Name, R2_Endpoint, R2_Secret_Key, UploadFile
 
 CurrentTime: str = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 MySQLDumpCommand: list[str] = ["mysqldump", "-A"]
@@ -100,7 +100,10 @@ LogDirectoryTree(Path(CurrentTime))
 shutil.rmtree(CurrentTime)
 logging.info(f"已删除原始备份文件夹：{CurrentTime}")
 
-logging.info("开始上传压缩文件到R2存储桶。")
-UploadFile(ArchiveZipFileName)
-logging.info(f"已上传备份文件：{ArchiveZipFileName}，文件大小：{humanize.naturalsize(os.path.getsize(ArchiveZipFileName))}。")
-logging.info(f"当前存储桶内的所有文件总共占用了：{GetBucketTotalSize()[1]} 的空间。")
+if all( S3_Config is not None for S3_Config in (R2_Endpoint, R2_Access_Key, R2_Secret_Key, R2_Bucket_Name) ) == True:
+    logging.info("开始上传压缩文件到R2存储桶。")
+    UploadFile(ArchiveZipFileName)
+    logging.info(f"已上传备份文件：{ArchiveZipFileName}，文件大小：{humanize.naturalsize(os.path.getsize(ArchiveZipFileName))}。")
+    logging.info(f"当前存储桶内的所有文件总共占用了：{GetBucketTotalSize()[1]} 的空间。")
+
+logging.info("备份过程全部完成。")
