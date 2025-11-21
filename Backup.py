@@ -5,7 +5,6 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
-import sys
 import zipfile
 
 import humanize
@@ -40,9 +39,6 @@ def LogDirectoryTree(RootDirectory: Path, Prefix: str= ""):
 
 @MeasureExecutionTime(StageName="数据库备份")
 def BackupDatabase(ShellCommand: list[str], OutputFileName: str, ErrorLogFileName: str, DatabaseName: str, RunAsUser: str | None = None):
-    if (sys.platform == "win32"):
-        RunAsUser = None
-        logging.warning("在Windows系统上运行时，无法指定用户。")
     logging.info(f"正在备份数据库：{DatabaseName}")
     try:
         DatabaseDumpResult = subprocess.run(

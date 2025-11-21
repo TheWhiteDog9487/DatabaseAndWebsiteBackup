@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 import shutil
 from datetime import datetime
+import sys
 
 import humanize
 
@@ -36,6 +37,10 @@ logging.info(f"MySQL保存命令：{MySQLDumpCommand}")
 logging.info(f"PostgreSQL保存命令：{PostgreSQLDumpCommand}")
 logging.info(f"网站根目录：{WebsiteLocation}")
 logging.info(f"当前时间：{CurrentTime}")
+
+if (sys.platform.startswith("linux") == False):
+    logging.fatal("本程序仅支持Linux平台。")
+    sys.exit(1)
 
 logging.info("备份开始。")
 
