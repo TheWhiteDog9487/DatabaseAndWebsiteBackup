@@ -69,8 +69,8 @@ os.mkdir(CurrentTime)
 os.chdir(CurrentTime)
 
 logging.info("开始数据库备份。")
-BackupDatabase(MySQLDumpCommand, MySQLDumpedFileName, MySQLDumpErrorLogFileName, "MySQL")
-BackupDatabase(PostgreSQLDumpCommand, PostgreSQLDumpedFileName, PostgreSQLDumpErrorLogFileName, "PostgreSQL", "postgres")
+ZipWorker.submit(BackupDatabase, MySQLDumpCommand, MySQLDumpedFileName, MySQLDumpErrorLogFileName, "MySQL")
+ZipWorker.submit(BackupDatabase, PostgreSQLDumpCommand, PostgreSQLDumpedFileName, PostgreSQLDumpErrorLogFileName, "PostgreSQL", "postgres")
 
 logging.info(f"开始备份网站根目录：{WebsiteLocation}")
 BackupWebsite(WebsiteLocation, WebsiteZipFileName)
