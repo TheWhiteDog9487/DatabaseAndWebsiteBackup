@@ -13,20 +13,16 @@ from ProcessTimer import MeasureExecutionTime
 
 R2_Endpoint = os.getenv("R2_Endpoint")
 if R2_Endpoint is None:
-    print("R2_Endpoint not provided. Please provide it as a command line argument.")
-    sys.exit(1)
+    logging.warning("R2_Endpoint没有作为环境变量被提供，这将导致备份文件不会被上传到云端。")
 R2_Access_Key = os.getenv("R2_Access_Key")
 if R2_Access_Key is None:
-    print("R2_Access_Key not provided. Please provide it as a environment variable.")
-    sys.exit(1)
+    logging.warning("R2_Access_Key没有作为环境变量被提供，这将导致备份文件不会被上传到云端。")
 R2_Secret_Key = os.getenv("R2_Secret_Key")
 if R2_Secret_Key is None:
-    print("R2_Secret_Key not provided. Please provide it as a environment variable.")
-    sys.exit(1)
+    logging.warning("R2_Secret_Key没有作为环境变量被提供，这将导致备份文件不会被上传到云端。")
 R2_Bucket_Name = os.getenv("R2_Bucket_Name")
 if R2_Bucket_Name is None:
-    print("R2_Bucket_Name not provided. Please provide it as a environment variable.")
-    sys.exit(1)
+    logging.warning("R2_Bucket_Name没有作为环境变量被提供，这将导致备份文件不会被上传到云端。")
 
 S3: S3Client = boto3.client(
     "s3",
