@@ -21,6 +21,14 @@
 - [types-boto3](https://pypi.org/project/types-boto3)
 - [Boto3](https://github.com/boto/boto3)
 
+# 需要设置的环境变量
+- S3相关( 如果不需要使用S3自动上传的功能可以不管 )  
+  如果这四个变量中的任意一个不存在，则自动跳过上传备份
+    - R2_Endpoint ：S3终结点URL
+    - R2_Access_Key ：访问密钥ID
+    - R2_Secret_Key ：机密访问密钥
+    - R2_Bucket_Name ：存储桶名称
+
 # 使用方法
 1. 安装Python(建议3.14及以上版本)
 2. [安装uv](https://docs.astral.sh/uv/getting-started/installation/)
@@ -38,6 +46,7 @@
 
 # 未来（可能有的）更新
 - **注册为systemd服务（重要）**
+- **更改为持续性后台服务模式（重要）**
 
 什么时候做啊，没个准数呢  
 可能什么时候会更新，也有可能什么时候提桶跑路了ㄟ(≧◇≦)ㄏ
