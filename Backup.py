@@ -59,6 +59,10 @@ def BackupDatabase(ShellCommand: list[str], OutputFileName: str, ErrorLogFileNam
         logging.error(f"由于权限不足，故无法备份{DatabaseName}。请切换到root或使用sudo重试。")
         logging.debug(f"异常信息：{Exception}")
     finally:
+        if os.path.getsize(ErrorLogFileName) == 0:
+            os.remove(ErrorLogFileName)
+        if os.path.getsize(OutputFileName) == 0:
+            os.remove(OutputFileName)
         logging.info(f"{DatabaseName}数据库备份操作已完成。")
 
 def BackupWebsite(WebsiteLocation: Path, WebsiteZipFileName: str):
