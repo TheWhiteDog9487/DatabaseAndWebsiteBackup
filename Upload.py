@@ -38,13 +38,13 @@ def ConfigVariables():
     if R2_Bucket_Name is None:
         logging.warning("R2_Bucket_Name没有作为环境变量被提供，这将导致备份文件不会被上传到云端。")
 
-    S3: S3Client = boto3.client(
+    S3 = boto3.client(
         "s3",
         aws_access_key_id=R2_Access_Key,
         aws_secret_access_key=R2_Secret_Key,
         endpoint_url=R2_Endpoint,
         region_name="auto")
-    AllObjectsInBucket: Optional[ListObjectsV2OutputTypeDef] = None
+    AllObjectsInBucket = None
     R2_Free_Space = 10 * (1024 ** 3) # 10GB
 
 def GetBucketTotalSize() -> tuple[int, str]:
