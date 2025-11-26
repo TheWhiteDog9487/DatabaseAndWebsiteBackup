@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 from typing import Optional
+from urllib.parse import urlparse
 
 import boto3
 import humanize
@@ -14,6 +15,9 @@ from ProcessTimer import MeasureExecutionTime
 R2_Endpoint = os.getenv("R2_Endpoint")
 if R2_Endpoint is None:
     logging.warning("R2_Endpoint没有作为环境变量被提供，这将导致备份文件不会被上传到云端。")
+if R2_Endpoint is not None:
+    URL = urlparse(R2_Endpoint)
+    R2_Endpoint = f"{URL.scheme}://{URL.netloc}"
 R2_Access_Key = os.getenv("R2_Access_Key")
 if R2_Access_Key is None:
     logging.warning("R2_Access_Key没有作为环境变量被提供，这将导致备份文件不会被上传到云端。")
@@ -38,6 +42,11 @@ def GetBucketTotalSize() -> tuple[int, str]:
     Total_Size = 0
     if AllObjectsInBucket is None:
         AllObjectsInBucket = S3.list_objects_v2(Bucket=R2_Bucket_Name) # type: ignore
+        try:
+            AllObjectsInBucket["Contents"] # type: ignore
+        except KeyError:
+            logging.info("存储桶内没有任何文件。")
+            return 0, humanize.naturalsize(0)
     for Object in AllObjectsInBucket["Contents"]: # type: ignore
         Total_Size += Object["Size"] # type: ignore
     Size_Humanize = humanize.naturalsize(Total_Size)
