@@ -10,6 +10,7 @@ import humanize
 from Backup import BackupCertbot, BackupCustomPath, BackupDatabase, BackupWebsite, GenerateSHA256Checksum, LogDirectoryTree, PackAllFiles, ZipWorker
 from PrepareBackup import GetDirectorySize
 from Upload import GetBucketTotalSize, R2_Access_Key, R2_Bucket_Name, R2_Endpoint, R2_Secret_Key, UploadFile
+import Upload
 
 CurrentTime: str = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 MySQLDumpCommand: list[str] = ["mysqldump", "-A"]
@@ -37,6 +38,7 @@ logging.info(f"MySQL保存命令：{MySQLDumpCommand}")
 logging.info(f"PostgreSQL保存命令：{PostgreSQLDumpCommand}")
 logging.info(f"网站根目录：{WebsiteLocation}")
 logging.info(f"当前时间：{CurrentTime}")
+Upload.ConfigVariables()
 
 if (sys.platform.startswith("linux") == False):
     logging.fatal("本程序仅支持Linux平台。")

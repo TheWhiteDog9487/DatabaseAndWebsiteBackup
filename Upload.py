@@ -12,30 +12,40 @@ from types_boto3_s3.type_defs import ListObjectsV2OutputTypeDef
 
 from ProcessTimer import MeasureExecutionTime
 
-R2_Endpoint = os.getenv("R2_Endpoint")
-if R2_Endpoint is None:
-    logging.warning("R2_Endpoint没有作为环境变量被提供，这将导致备份文件不会被上传到云端。")
-if R2_Endpoint is not None:
-    URL = urlparse(R2_Endpoint)
-    R2_Endpoint = f"{URL.scheme}://{URL.netloc}"
-R2_Access_Key = os.getenv("R2_Access_Key")
-if R2_Access_Key is None:
-    logging.warning("R2_Access_Key没有作为环境变量被提供，这将导致备份文件不会被上传到云端。")
-R2_Secret_Key = os.getenv("R2_Secret_Key")
-if R2_Secret_Key is None:
-    logging.warning("R2_Secret_Key没有作为环境变量被提供，这将导致备份文件不会被上传到云端。")
-R2_Bucket_Name = os.getenv("R2_Bucket_Name")
-if R2_Bucket_Name is None:
-    logging.warning("R2_Bucket_Name没有作为环境变量被提供，这将导致备份文件不会被上传到云端。")
+R2_Endpoint: Optional[str]
+R2_Access_Key: Optional[str]
+R2_Secret_Key: Optional[str]
+R2_Bucket_Name: Optional[str]
+R2_Free_Space: int
+S3: S3Client
+AllObjectsInBucket: Optional[ListObjectsV2OutputTypeDef]
 
-S3: S3Client = boto3.client(
-    "s3",
-    aws_access_key_id=R2_Access_Key,
-    aws_secret_access_key=R2_Secret_Key,
-    endpoint_url=R2_Endpoint,
-    region_name="auto")
-AllObjectsInBucket: Optional[ListObjectsV2OutputTypeDef] = None
-R2_Free_Space = 10 * (1024 ** 3) # 10GB
+def ConfigVariables():
+    global S3, AllObjectsInBucket, R2_Bucket_Name, R2_Free_Space, R2_Endpoint, R2_Access_Key, R2_Secret_Key
+    R2_Endpoint = os.getenv("R2_Endpoint")
+    if R2_Endpoint is None:
+        logging.warning("R2_Endpoint没有作为环境变量被提供，这将导致备份文件不会被上传到云端。")
+    if R2_Endpoint is not None:
+        URL = urlparse(R2_Endpoint)
+        R2_Endpoint = f"{URL.scheme}://{URL.netloc}"
+    R2_Access_Key = os.getenv("R2_Access_Key")
+    if R2_Access_Key is None:
+        logging.warning("R2_Access_Key没有作为环境变量被提供，这将导致备份文件不会被上传到云端。")
+    R2_Secret_Key = os.getenv("R2_Secret_Key")
+    if R2_Secret_Key is None:
+        logging.warning("R2_Secret_Key没有作为环境变量被提供，这将导致备份文件不会被上传到云端。")
+    R2_Bucket_Name = os.getenv("R2_Bucket_Name")
+    if R2_Bucket_Name is None:
+        logging.warning("R2_Bucket_Name没有作为环境变量被提供，这将导致备份文件不会被上传到云端。")
+
+    S3: S3Client = boto3.client(
+        "s3",
+        aws_access_key_id=R2_Access_Key,
+        aws_secret_access_key=R2_Secret_Key,
+        endpoint_url=R2_Endpoint,
+        region_name="auto")
+    AllObjectsInBucket: Optional[ListObjectsV2OutputTypeDef] = None
+    R2_Free_Space = 10 * (1024 ** 3) # 10GB
 
 def GetBucketTotalSize() -> tuple[int, str]:
     global AllObjectsInBucket
