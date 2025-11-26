@@ -12,13 +12,13 @@ from types_boto3_s3.type_defs import ListObjectsV2OutputTypeDef
 
 from ProcessTimer import MeasureExecutionTime
 
-R2_Endpoint: Optional[str]
-R2_Access_Key: Optional[str]
-R2_Secret_Key: Optional[str]
-R2_Bucket_Name: Optional[str]
-R2_Free_Space: int
-S3: S3Client
-AllObjectsInBucket: Optional[ListObjectsV2OutputTypeDef]
+R2_Endpoint: Optional[str] = None
+R2_Access_Key: Optional[str] = None
+R2_Secret_Key: Optional[str] = None
+R2_Bucket_Name: Optional[str] = None
+R2_Free_Space: int = 0
+S3: Optional[S3Client] = None
+AllObjectsInBucket: Optional[ListObjectsV2OutputTypeDef] = None
 
 def ConfigVariables():
     global S3, AllObjectsInBucket, R2_Bucket_Name, R2_Free_Space, R2_Endpoint, R2_Access_Key, R2_Secret_Key
@@ -37,7 +37,6 @@ def ConfigVariables():
     R2_Bucket_Name = os.getenv("R2_Bucket_Name")
     if R2_Bucket_Name is None:
         logging.warning("R2_Bucket_Name没有作为环境变量被提供，这将导致备份文件不会被上传到云端。")
-
     S3 = boto3.client(
         "s3",
         aws_access_key_id=R2_Access_Key,
@@ -48,10 +47,13 @@ def ConfigVariables():
     R2_Free_Space = 10 * (1024 ** 3) # 10GB
 
 def GetBucketTotalSize() -> tuple[int, str]:
+    assert S3 is not None
+    assert R2_Bucket_Name is not None
+
     global AllObjectsInBucket
     Total_Size = 0
     if AllObjectsInBucket is None:
-        AllObjectsInBucket = S3.list_objects_v2(Bucket=R2_Bucket_Name) # type: ignore
+        AllObjectsInBucket = S3.list_objects_v2(Bucket=R2_Bucket_Name)
         try:
             AllObjectsInBucket["Contents"] # type: ignore
         except KeyError:
@@ -63,6 +65,9 @@ def GetBucketTotalSize() -> tuple[int, str]:
     return Total_Size, Size_Humanize
 
 def OptimizeStorage(FileSize: int):
+    assert S3 is not None
+    assert R2_Bucket_Name is not None
+    
     ObjectNameToLastModifiedDict = {
         Name: LastModifiedDate
         for Name, LastModifiedDate in sorted( (
@@ -72,7 +77,8 @@ def OptimizeStorage(FileSize: int):
             reverse=True ) }
     while FileSize + GetBucketTotalSize()[0] > R2_Free_Space:
         DeleteFileName, DeleteFileLastModifiedDate = ObjectNameToLastModifiedDict.popitem()
-        S3.delete_object(Bucket=R2_Bucket_Name, Key=DeleteFileName) # type: ignore
+        assert DeleteFileName is not None
+        S3.delete_object(Bucket=R2_Bucket_Name, Key=DeleteFileName)
         AllObjectsInBucket["Contents"] = [ # type: ignore
             Object for Object in AllObjectsInBucket["Contents"] # type: ignore
             if Object.get("Key") != DeleteFileName ]
@@ -80,6 +86,8 @@ def OptimizeStorage(FileSize: int):
 
 @MeasureExecutionTime("上传备份文件")
 def UploadFile(FilePath: str):
+    assert S3 is not None
+
     logging.info(f"当前存储桶内的所有文件总共占用了：{GetBucketTotalSize()[1]} 的空间。")
     FileSize = os.path.getsize(FilePath)
     OptimizeStorage(FileSize)
