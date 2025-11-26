@@ -14,13 +14,7 @@ from ProcessTimer import MeasureExecutionTime
 
 ZipWorker: Optional[ProcessPoolExecutor] = None
 DontCompressFileExtensions = (".mp4", ".mkv", ".zip", "tar.gz")
-
-try:
-    logging.info("您的Python版本支持ZStandard，将使用Zstandard算法进行压缩。")
-    Algorithms = zipfile.ZIP_ZSTANDARD
-except AttributeError:
-    logging.warning("当前Python版本不支持Zstandard算法，将使用Deflate算法进行压缩。")
-    Algorithms = zipfile.ZIP_DEFLATED
+Algorithms: int = 0
 
 def ZipDirectoryTree(ZipFileName: str, TargetDirectory: Path):
     with zipfile.ZipFile(ZipFileName, "w", Algorithms) as ZipFile:
