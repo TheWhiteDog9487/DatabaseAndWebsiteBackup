@@ -5,14 +5,13 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
-from typing import Optional
 import zipfile
 
 import humanize
 
 from ProcessTimer import MeasureExecutionTime
 
-ZipWorker: Optional[ProcessPoolExecutor] = None
+ZipWorker = ProcessPoolExecutor()
 DontCompressFileExtensions = (".mp4", ".mkv", ".zip", "tar.gz")
 Algorithms: int = 0
 
@@ -66,11 +65,9 @@ def BackupDatabase(ShellCommand: list[str], OutputFileName: str, ErrorLogFileNam
         logging.info(f"{DatabaseName}数据库备份操作已完成。")
 
 def BackupWebsite(WebsiteLocation: Path, WebsiteZipFileName: str):
-    assert ZipWorker is not None
     ZipWorker.submit(ZipDirectoryTree, WebsiteZipFileName, WebsiteLocation)
 
 def BackupCertbot(CertbotLocation: Path, CertbotZipFileName: str):
-    assert ZipWorker is not None
     ZipWorker.submit(ZipDirectoryTree, CertbotZipFileName, CertbotLocation)
 
 def GenerateSHA256Checksum(ChecksumFileName: Path, Directory: Path = Path(".")):
@@ -84,7 +81,6 @@ def GenerateSHA256Checksum(ChecksumFileName: Path, Directory: Path = Path(".")):
             ChecksumFile.write(f"{FileName}: {SHA256.hexdigest()}\n")
 
 def BackupCustomPath(PathListFile: Path):
-    assert ZipWorker is not None
     if PathListFile.exists() == False:
         logging.warning(f"自定义路径列表文件 {PathListFile} 不存在，跳过自定义路径备份。")
         return
