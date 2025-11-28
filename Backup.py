@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+from threading import Lock
 import zipfile
 
 import humanize
@@ -13,6 +14,8 @@ from ProcessTimer import MeasureExecutionTime
 
 ZipWorker = ThreadPoolExecutor()
 DontCompressFileExtensions = (".mp4", ".mkv", ".zip", "tar.gz")
+SHA256ResultFileLock: Lock = Lock()
+SHA256 = hashlib.sha256()
 Algorithms: int
 try:
     Algorithms = zipfile.ZIP_ZSTANDARD
@@ -76,15 +79,19 @@ def BackupWebsite(WebsiteLocation: Path, WebsiteZipFileName: str):
 def BackupCertbot(CertbotLocation: Path, CertbotZipFileName: str):
     ZipWorker.submit(ZipDirectoryTree, CertbotZipFileName, CertbotLocation)
 
+def ComputeSingleFFileSHA256(FileName: Path, ResultFile: Path):
+    with open(FileName, "rb") as DataFile:
+            while DataChunk := DataFile.read(65536):
+                SHA256.update(DataChunk)
+    with SHA256ResultFileLock, open(ResultFile, "a", encoding="utf-8") as ChecksumFile:
+        ChecksumFile.write(f"{FileName}: {SHA256.hexdigest()}\n")
+
 def GenerateSHA256Checksum(ChecksumFileName: Path, Directory: Path = Path(".")):
-    with open(ChecksumFileName, "tw+") as ChecksumFile:
-        Files = [FileName for FileName in Directory.iterdir() if FileName.suffix in [".sql", ".zip"]]
-        for FileName in Files:
-            SHA256 = hashlib.sha256()
-            with open(FileName, "rb") as DataFile:
-                while DataChunk := DataFile.read(65536):
-                    SHA256.update(DataChunk)
-            ChecksumFile.write(f"{FileName}: {SHA256.hexdigest()}\n")
+    ChecksumWorker = ThreadPoolExecutor()
+    Files = [FileName for FileName in Directory.iterdir()]
+    for FileName in Files:
+        ChecksumWorker.submit(ComputeSingleFFileSHA256, FileName, ChecksumFileName)
+    ChecksumWorker.shutdown(wait=True)
 
 def BackupCustomPath(PathListFile: Path):
     if PathListFile.exists() == False:
