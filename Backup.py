@@ -1,190 +1,120 @@
-# /// script
-# requires-python = ">=3.13"
-# dependencies = [
-#     "humanize>=4.12.3",
-# ]
-# ///
-
-from datetime import datetime
-import subprocess
-import sys
-import zipfile
-import os
-import logging
-import shutil
-from time import time
+from concurrent.futures import ThreadPoolExecutor
 import hashlib
+import logging
+import os
+from pathlib import Path
+import shutil
+import subprocess
+from threading import Lock
+import zipfile
 
 import humanize
 
-CurrentTime: str = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
-MySQLDumpCommand: list[str] = ["mysqldump", "-A"]
-MySQLDumpedFileName: str = "MySQL.sql"
-MySQLDumpErrorLogFileName: str = "MySQLError.log"
-PostgreSQLDumpCommand: list[str] = ["pg_dumpall"]
-PostgreSQLDumpedFileName: str = "PostgreSQL.sql"
-PostgreSQLDumpErrorLogFileName: str = "PostgreSQLError.log"
-WebsiteLocation: str = "/var/www"
-WebsiteZipFileName: str = "WebsiteRoot.zip"
-BackupRootDirectory: str = "Backup"
-BackupDirectorySizeLimit: int = 10 * 1024 * 1024 * 1024  # 10 GiB
-ArchiveZipFileName = f"{CurrentTime}.zip"
-ChecksumFileName: str = "sha256.txt"
+from ProcessTimer import MeasureExecutionTime
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S')
-humanize.i18n.activate("zh_CN")
-logging.info(f"MySQL保存命令：{MySQLDumpCommand}")
-logging.info(f"PostgreSQL保存命令：{PostgreSQLDumpCommand}")
-logging.info(f"网站根目录：{WebsiteLocation}")
-logging.info(f"当前时间：{CurrentTime}")
+ZipWorker = ThreadPoolExecutor()
+DontCompressFileExtensions = (".mp4", ".mkv", ".zip", ".tar.gz")
+SHA256ResultFileLock: Lock = Lock()
+CompressAlgorithm: int
+try:
+    CompressAlgorithm = zipfile.ZIP_ZSTANDARD
+    logging.info("您使用的Python运行时支持Zstd，将使用Zstandard进行压缩")
+except AttributeError:
+    CompressAlgorithm = zipfile.ZIP_DEFLATED
+    logging.warning("您使用的Python运行时不支持Zstd，将使用Deflate进行压缩，建议升级到Python 3.14或更高版本以获得更好的压缩性能")
 
-def GetDirectorySize(Path: str) -> tuple[int, str]:
-    Total = 0
-    for DirectoryPath, DirectoryNames, FileNames in os.walk(Path):
-        for File in FileNames:
-            FilePath = os.path.join(DirectoryPath, File)
-            if os.path.isfile(FilePath):
-                Total += os.path.getsize(FilePath)
-    return Total, humanize.naturalsize(Total)
+def ZipDirectoryTree(ZipFileName: str, TargetDirectory: Path):
+    with zipfile.ZipFile(ZipFileName, "w", CompressAlgorithm) as ZipFile:
+        for FolderName, SubFolders, FileNames in os.walk(TargetDirectory):
+            for FileName in FileNames:
+                FilePath = os.path.join(FolderName, FileName)
+                CompressLevel = 0 if FileName.endswith( DontCompressFileExtensions ) else 6
+                ZipFile.write(FilePath, arcname=os.path.relpath(FilePath, TargetDirectory), compresslevel=CompressLevel)                    
 
-TotalStartTime = time()
-logging.info("备份开始。")
-
-if os.path.exists(BackupRootDirectory) == False:
-    logging.info(f"备份根目录 {BackupRootDirectory} 不存在，正在创建。")
-    os.mkdir(BackupRootDirectory)
-else:
-    logging.info(f"备份目录体积限制：{humanize.naturalsize(BackupDirectorySizeLimit)}")
-    while True:
-        TotalSize, TotalSizeHumanize = GetDirectorySize(BackupRootDirectory)
-        logging.info(f"当前备份目录体积：{TotalSizeHumanize}")
-        if TotalSize <= BackupDirectorySizeLimit:
-            logging.info("备份目录体积在限制范围内，备份继续。")
-            break
-        Files = [File for File in os.listdir(BackupRootDirectory) if os.path.isfile(os.path.join(BackupRootDirectory, File))]
-        if len(Files) == 0:
-            break
-        Files.sort()
-        Oldest = Files[0]
-        OldestPath = os.path.join(BackupRootDirectory, Oldest)
-        logging.warning(f"备份目录已超出体积限制，正在删除最旧的备份：{OldestPath}，文件大小：{humanize.naturalsize(os.path.getsize(OldestPath))}")
-        os.remove(OldestPath)
-os.chdir(BackupRootDirectory)
-
-os.mkdir(CurrentTime)
-os.chdir(CurrentTime)
+def LogDirectoryTree(RootDirectory: Path, Prefix: str= ""):
+    Entries = sorted(RootDirectory.iterdir())
+    for Index, Entry in enumerate(Entries):
+        Connector = "└── " if Index == len(Entries) - 1 else "├── "
+        logging.info(f"{Prefix}{Connector}{Entry}")
+        if Entry.is_dir():
+            Extension = "    " if Index == len(Entries) - 1 else "│   "
+            LogDirectoryTree(Entry, Prefix + Extension)
 
 def BackupDatabase(ShellCommand: list[str], OutputFileName: str, ErrorLogFileName: str, DatabaseName: str, RunAsUser: str | None = None):
-    StartTime = time()
-    if (sys.platform == "win32"):
-        RunAsUser = None
-        logging.warning("在Windows系统上运行时，无法指定用户。")
     logging.info(f"正在备份数据库：{DatabaseName}")
     try:
-        DatabaseDumpResult = subprocess.run(
-            args=ShellCommand,
-            capture_output=True,
-            user=RunAsUser)
-        if DatabaseDumpResult.returncode == 0:
-            logging.info(f"{DatabaseName}备份成功。")
+        with open(OutputFileName, "bw+") as OutputFile, open(ErrorLogFileName, "bw+") as ErrorLogFile:
+            DatabaseDumpResult = subprocess.run(
+                args=ShellCommand,
+                stdout=OutputFile,
+                stderr=ErrorLogFile,
+                user=RunAsUser)
             logging.debug(f"{ShellCommand}的返回值：{DatabaseDumpResult.returncode}")
-            logging.debug(f"{ShellCommand}输出的StdOut：{DatabaseDumpResult.stdout}")
-            with open(OutputFileName, "bw+") as File:
-                File.write(DatabaseDumpResult.stdout)
-            logging.info(f"{DatabaseName}备份文件已保存：{OutputFileName}")
-            logging.info(f"{DatabaseName}备份文件大小：{humanize.naturalsize(os.path.getsize(OutputFileName))}")
-        else:
-            logging.error(f"{DatabaseName}备份失败。")
-            logging.debug(f"{ShellCommand}的返回值：{DatabaseDumpResult.returncode}")
-            logging.debug(f"{ShellCommand}输出的StdErr：{DatabaseDumpResult.stderr}")
-            logging.debug(f"{ShellCommand}输出的StdOut：{DatabaseDumpResult.stdout}")
-            with open(ErrorLogFileName, "bw+") as File:
-                File.write(DatabaseDumpResult.stderr)
-            logging.info(f"{DatabaseName}错误日志已保存：{ErrorLogFileName}")
+            if DatabaseDumpResult.returncode == 0:
+                logging.info(f"{DatabaseName}备份成功。")
+                logging.info(f"{DatabaseName}备份文件已保存：{OutputFileName}")
+                logging.info(f"{DatabaseName}备份文件大小：{humanize.naturalsize(os.path.getsize(OutputFileName))}")
     except FileNotFoundError as Exception:
         logging.error(f"由于可执行文件{ShellCommand[0]}不存在，故跳过对{DatabaseName}的备份。")
         logging.debug(f"异常信息：{Exception}")
-    EndTime = time()
-    logging.info(f"{DatabaseName}备份耗时：{humanize.precisedelta(EndTime - StartTime)}")
+    except PermissionError as Exception:
+        logging.error(f"由于权限不足，故无法备份{DatabaseName}。请切换到root或使用sudo重试。")
+        logging.debug(f"异常信息：{Exception}")
+    finally:
+        if os.path.getsize(ErrorLogFileName) == 0:
+            os.remove(ErrorLogFileName)
+        else:
+            logging.error(f"{DatabaseName}备份失败。")
+            with open(ErrorLogFileName, "br") as ErrorLogFile:
+                Contents = ErrorLogFile.read().decode("utf-8")
+                logging.debug(f"{ShellCommand}输出的StdErr：{Contents}")
+                logging.info(f"{DatabaseName}错误日志已保存：{ErrorLogFileName}")
+        if os.path.getsize(OutputFileName) == 0:
+            os.remove(OutputFileName)
+        logging.info(f"{DatabaseName}数据库备份操作已完成。")
 
-DatabaseStageStart = time()
-logging.info("开始数据库备份。")
+def BackupWebsite(WebsiteLocation: Path, WebsiteZipFileName: str):
+    ZipWorker.submit(ZipDirectoryTree, WebsiteZipFileName, WebsiteLocation)
 
-BackupDatabase(MySQLDumpCommand, MySQLDumpedFileName, MySQLDumpErrorLogFileName, "MySQL")
-BackupDatabase(PostgreSQLDumpCommand, PostgreSQLDumpedFileName, PostgreSQLDumpErrorLogFileName, "PostgreSQL", "postgres")
+def BackupCertbot(CertbotLocation: Path, CertbotZipFileName: str):
+    ZipWorker.submit(ZipDirectoryTree, CertbotZipFileName, CertbotLocation)
 
-DatabaseStageEnd = time()
-logging.info("数据库备份完成。")
-logging.info(f"数据库备份耗时：{humanize.naturaldelta(DatabaseStageEnd - DatabaseStageStart)}")
-
-if(len(os.listdir(".")) == 0):
-    logging.warning(f"没有备份任何内容，删除空目录：{CurrentTime}")
-    os.chdir("..")
-    os.rmdir(CurrentTime)
-
-WebsiteStageStart = time()
-logging.info("开始网站根目录备份。")
-logging.info(f"正在备份网站根目录：{WebsiteLocation}")
-
-def ZipDirectoryTree(ZipFileName: str, TargetDirectory: str):
-    with zipfile.ZipFile(ZipFileName, "w", compression=zipfile.ZIP_DEFLATED) as ZipFile:
-            for FolderName, SubFolders, FileNames in os.walk(TargetDirectory):
-                for FileName in FileNames:
-                    ZipFile.write(os.path.join(FolderName, FileName), arcname=os.path.relpath(os.path.join(FolderName, FileName), TargetDirectory), compresslevel= 0 if FileName.endswith((".mp4", ".mkv", ".zip", ".tar.gz")) else 6)
-
-ZipDirectoryTree(WebsiteZipFileName, WebsiteLocation)
-logging.info("网站根目录备份已完成。")
-logging.info(f"网站根目录备份已保存：{WebsiteZipFileName}")
-logging.info(f"网站根目录备份文件大小：{humanize.naturalsize(os.path.getsize(WebsiteZipFileName))}")
-WebsiteStageEnd = time()
-logging.info(f"网站根目录备份耗时：{humanize.precisedelta(WebsiteStageEnd - WebsiteStageStart)}")
-
-logging.info("开始计算备份文件的SHA256校验和。")
-HashStageStart = time()
-with open(ChecksumFileName, "tw+") as ChecksumFile:
-    Files = [FileName for FileName in os.listdir(".") if FileName.endswith((".sql", ".zip"))]
-    for FileName in Files:
-        SHA256 = hashlib.sha256()
-        with open(FileName, "rb") as DataFile:
-            SHA256.update(DataFile.read())
+def ComputeSingleFileSHA256(FileName: Path, ResultFile: Path):
+    SHA256 = hashlib.sha256()
+    with open(FileName, "rb") as DataFile:
+            while DataChunk := DataFile.read(65536):
+                SHA256.update(DataChunk)
+    with SHA256ResultFileLock, open(ResultFile, "a", encoding="utf-8") as ChecksumFile:
         ChecksumFile.write(f"{FileName}: {SHA256.hexdigest()}\n")
-HashStageEnd = time()
-logging.info("备份文件的SHA256校验和计算完成。")
-logging.info(f"SHA256校验和已保存：{ChecksumFileName}")
-logging.info(f"SHA256校验和计算耗时：{humanize.precisedelta(HashStageEnd - HashStageStart)}")
 
-TotalEndTime = time()
-logging.info("备份完成时间。")
-logging.info(f"备份总耗时：{humanize.precisedelta(TotalEndTime - TotalStartTime)}")
-logging.info("所有备份操作已完成。")
+def GenerateSHA256Checksum(ChecksumFileName: Path, Directory: Path = Path(".")):
+    ChecksumWorker = ThreadPoolExecutor()
+    Files = [File for File in Directory.iterdir() if File.is_file()]
+    for FileName in Files:
+        ChecksumWorker.submit(ComputeSingleFileSHA256, FileName, ChecksumFileName)
+    ChecksumWorker.shutdown(wait=True)
 
-os.chdir("..")
-ZipStartTime = time()
-logging.info(f"开始打包备份文件夹为：{ArchiveZipFileName}")
-ZipDirectoryTree(ArchiveZipFileName, CurrentTime)
-logging.info("备份文件夹已经打包完成。")
-logging.info(f"Zip文件大小：{humanize.naturalsize(os.path.getsize(ArchiveZipFileName))}")
-ZipEndTime = time()
-logging.info(f"打包耗时：{humanize.precisedelta(ZipEndTime - ZipStartTime)}")
+def BackupCustomPath(PathListFile: Path):
+    if PathListFile.exists() == False:
+        logging.warning(f"自定义路径列表文件 {PathListFile} 不存在，跳过自定义路径备份。")
+        return
+    Paths: list[Path] = []
+    with open(PathListFile, "rt", encoding="utf-8") as File:
+        Paths = [Path(Line.strip()) for Line in File.readlines() if Line.strip() != "" and Line.strip().startswith("#") == False]
+    if len(Paths) == 0:
+        logging.info("自定义路径列表文件中没有有效条目，跳过自定义路径备份。")
+        return
+    for BackupPath in Paths:
+        if BackupPath.exists() == False:
+            logging.warning(f"自定义路径 {BackupPath} 不存在，跳过对该条目的备份。")
+            continue
+        if BackupPath.is_file():
+            logging.info(f"正在备份自定义文件：{BackupPath}")
+            ZipWorker.submit(shutil.copy, BackupPath, os.getcwd())
+        elif BackupPath.is_dir():
+            logging.info(f"正在备份自定义目录：{BackupPath}")
+            ZipWorker.submit(ZipDirectoryTree, f"{BackupPath.name}.zip", BackupPath)
 
-def LogDirectoryTree(RootDirectory: str, Prefix: str= ""):
-    Entries = sorted(os.listdir(RootDirectory))
-    for Index, Entry in enumerate(Entries):
-        Path = os.path.join(RootDirectory, Entry)
-        Connector = "└── " if Index == len(Entries) - 1 else "├── "
-        logging.info(f"{Prefix}{Connector}{Entry}")
-        if os.path.isdir(Path):
-            Extension = "    " if Index == len(Entries) - 1 else "│   "
-            LogDirectoryTree(Path, Prefix + Extension)
-
-logging.info(f"即将删除备份文件夹，内容如下：")
-LogDirectoryTree(CurrentTime)
-
-DeleteStartTime = time()
-shutil.rmtree(CurrentTime)
-logging.info(f"已删除原始备份文件夹：{CurrentTime}")
-DeleteEndTime = time()
-logging.info(f"删除文件夹耗时：{humanize.precisedelta(DeleteEndTime - DeleteStartTime)}")
+@MeasureExecutionTime(StageName="打包所有文件")
+def PackAllFiles(ZipFileName: str, Directory: Path):
+    ZipDirectoryTree(ZipFileName, Directory)
