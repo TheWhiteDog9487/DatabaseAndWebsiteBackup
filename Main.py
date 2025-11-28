@@ -34,10 +34,6 @@ ArchiveZipFileName: str = f"{CurrentTime}.zip"
 ChecksumFileName: Path = Path("sha256.txt")
 CustomPathListFileName: Path = Path("CustomPathList.txt")
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S')
 humanize.i18n.activate("zh_CN") # type: ignore
 logging.info(f"MySQL保存命令：{MySQLDumpCommand}")
 logging.info(f"PostgreSQL保存命令：{PostgreSQLDumpCommand}")

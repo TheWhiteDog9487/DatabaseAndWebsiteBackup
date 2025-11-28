@@ -13,7 +13,7 @@ from ProcessTimer import MeasureExecutionTime
 
 ZipWorker = ThreadPoolExecutor()
 DontCompressFileExtensions = (".mp4", ".mkv", ".zip", "tar.gz")
-Algorithms: int = 0
+Algorithms: int = zipfile.ZIP_ZSTANDARD if hasattr(zipfile, "ZIP_ZSTANDARD") else zipfile.ZIP_DEFLATED
 
 def ZipDirectoryTree(ZipFileName: str, TargetDirectory: Path):
     with zipfile.ZipFile(ZipFileName, "w", Algorithms) as ZipFile:
