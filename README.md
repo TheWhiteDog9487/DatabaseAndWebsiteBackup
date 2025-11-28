@@ -10,7 +10,7 @@
 - 自动清理旧备份以节省空间
 - 自动备份到Cloudflare R2或其他S3兼容存储
 - 自动确保本程序上传的备份数据总大小不超过R2免费层级
-- 多进程同时进行备份压缩
+- 多线程同时进行备份压缩
 - 根据`CustomPathList.txt`内提供的路径进行自定义位置的备份
 - 在可用的情况下使用zstd以提高压缩率和压缩速度
 - 详细的日志记录
@@ -30,14 +30,13 @@
     - R2_Bucket_Name ：存储桶名称
 
 # 使用方法
-1. 安装Python(建议3.14及以上版本)
-2. [安装uv](https://docs.astral.sh/uv/getting-started/installation/)
-3. 克隆本仓库
+1. [安装uv](https://docs.astral.sh/uv/getting-started/installation/)
+2. 克隆本仓库
     ```shell
     git clone https://github.com/TheWhiteDog9487/DatabaseAndWebsiteBackup
     cd DatabaseAndWebsiteBackup
     ```
-4. 运行脚本
+3. 运行脚本
     ```shell
     uv run Main.py
     # 如果您需要备份PostgreSQL，请使用root执行上面的命令，或者使用下面的命令
