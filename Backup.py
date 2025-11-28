@@ -49,16 +49,11 @@ def BackupDatabase(ShellCommand: list[str], OutputFileName: str, ErrorLogFileNam
                 stdout=OutputFile,
                 stderr=ErrorLogFile,
                 user=RunAsUser)
+            logging.debug(f"{ShellCommand}的返回值：{DatabaseDumpResult.returncode}")
             if DatabaseDumpResult.returncode == 0:
                 logging.info(f"{DatabaseName}备份成功。")
-                logging.debug(f"{ShellCommand}的返回值：{DatabaseDumpResult.returncode}")
                 logging.info(f"{DatabaseName}备份文件已保存：{OutputFileName}")
                 logging.info(f"{DatabaseName}备份文件大小：{humanize.naturalsize(os.path.getsize(OutputFileName))}")
-            else:
-                logging.error(f"{DatabaseName}备份失败。")
-                logging.debug(f"{ShellCommand}的返回值：{DatabaseDumpResult.returncode}")
-                logging.debug(f"{ShellCommand}输出的StdErr：{ErrorLogFile.read().decode('utf-8')}")
-                logging.info(f"{DatabaseName}错误日志已保存：{ErrorLogFileName}")
     except FileNotFoundError as Exception:
         logging.error(f"由于可执行文件{ShellCommand[0]}不存在，故跳过对{DatabaseName}的备份。")
         logging.debug(f"异常信息：{Exception}")
@@ -68,6 +63,12 @@ def BackupDatabase(ShellCommand: list[str], OutputFileName: str, ErrorLogFileNam
     finally:
         if os.path.getsize(ErrorLogFileName) == 0:
             os.remove(ErrorLogFileName)
+        else:
+            logging.error(f"{DatabaseName}备份失败。")
+            with open(ErrorLogFileName, "br") as ErrorLogFile:
+                Contents = ErrorLogFile.read().decode("utf-8")
+                logging.debug(f"{ShellCommand}输出的StdErr：{Contents}")
+                logging.info(f"{DatabaseName}错误日志已保存：{ErrorLogFileName}")
         if os.path.getsize(OutputFileName) == 0:
             os.remove(OutputFileName)
         logging.info(f"{DatabaseName}数据库备份操作已完成。")
