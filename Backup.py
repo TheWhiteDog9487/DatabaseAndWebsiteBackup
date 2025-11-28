@@ -13,19 +13,19 @@ import humanize
 from ProcessTimer import MeasureExecutionTime
 
 ZipWorker = ThreadPoolExecutor()
-DontCompressFileExtensions = (".mp4", ".mkv", ".zip", "tar.gz")
+DontCompressFileExtensions = (".mp4", ".mkv", ".zip", ".tar.gz")
 SHA256ResultFileLock: Lock = Lock()
 SHA256 = hashlib.sha256()
-Algorithms: int
+CompressAlgorithm: int
 try:
-    Algorithms = zipfile.ZIP_ZSTANDARD
+    CompressAlgorithm = zipfile.ZIP_ZSTANDARD
     logging.info("您使用的Python运行时支持Zstd，将使用Zstandard进行压缩")
 except AttributeError:
-    Algorithms = zipfile.ZIP_DEFLATED
+    CompressAlgorithm = zipfile.ZIP_DEFLATED
     logging.warning("您使用的Python运行时不支持Zstd，将使用Deflate进行压缩，建议升级到Python 3.14或更高版本以获得更好的压缩性能")
 
 def ZipDirectoryTree(ZipFileName: str, TargetDirectory: Path):
-    with zipfile.ZipFile(ZipFileName, "w", Algorithms) as ZipFile:
+    with zipfile.ZipFile(ZipFileName, "w", CompressAlgorithm) as ZipFile:
         for FolderName, SubFolders, FileNames in os.walk(TargetDirectory):
             for FileName in FileNames:
                 FilePath = os.path.join(FolderName, FileName)
@@ -79,7 +79,7 @@ def BackupWebsite(WebsiteLocation: Path, WebsiteZipFileName: str):
 def BackupCertbot(CertbotLocation: Path, CertbotZipFileName: str):
     ZipWorker.submit(ZipDirectoryTree, CertbotZipFileName, CertbotLocation)
 
-def ComputeSingleFFileSHA256(FileName: Path, ResultFile: Path):
+def ComputeSingleFileSHA256(FileName: Path, ResultFile: Path):
     with open(FileName, "rb") as DataFile:
             while DataChunk := DataFile.read(65536):
                 SHA256.update(DataChunk)
@@ -90,7 +90,7 @@ def GenerateSHA256Checksum(ChecksumFileName: Path, Directory: Path = Path(".")):
     ChecksumWorker = ThreadPoolExecutor()
     Files = [FileName for FileName in Directory.iterdir()]
     for FileName in Files:
-        ChecksumWorker.submit(ComputeSingleFFileSHA256, FileName, ChecksumFileName)
+        ChecksumWorker.submit(ComputeSingleFileSHA256, FileName, ChecksumFileName)
     ChecksumWorker.shutdown(wait=True)
 
 def BackupCustomPath(PathListFile: Path):
