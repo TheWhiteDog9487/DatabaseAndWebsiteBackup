@@ -15,7 +15,6 @@ from ProcessTimer import MeasureExecutionTime
 ZipWorker = ThreadPoolExecutor()
 DontCompressFileExtensions = (".mp4", ".mkv", ".zip", ".tar.gz")
 SHA256ResultFileLock: Lock = Lock()
-SHA256 = hashlib.sha256()
 CompressAlgorithm: int
 try:
     CompressAlgorithm = zipfile.ZIP_ZSTANDARD
@@ -80,6 +79,7 @@ def BackupCertbot(CertbotLocation: Path, CertbotZipFileName: str):
     ZipWorker.submit(ZipDirectoryTree, CertbotZipFileName, CertbotLocation)
 
 def ComputeSingleFileSHA256(FileName: Path, ResultFile: Path):
+    SHA256 = hashlib.sha256()
     with open(FileName, "rb") as DataFile:
             while DataChunk := DataFile.read(65536):
                 SHA256.update(DataChunk)
