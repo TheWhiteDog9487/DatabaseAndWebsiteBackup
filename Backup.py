@@ -13,7 +13,13 @@ from ProcessTimer import MeasureExecutionTime
 
 ZipWorker = ThreadPoolExecutor()
 DontCompressFileExtensions = (".mp4", ".mkv", ".zip", "tar.gz")
-Algorithms: int = zipfile.ZIP_ZSTANDARD if hasattr(zipfile, "ZIP_ZSTANDARD") else zipfile.ZIP_DEFLATED
+Algorithms: int
+try:
+    Algorithms = zipfile.ZIP_ZSTANDARD
+    logging.info("您使用的Python运行时支持Zstd，将使用Zstandard进行压缩")
+except AttributeError:
+    Algorithms = zipfile.ZIP_DEFLATED
+    logging.warning("您使用的Python运行时不支持Zstd，将使用Deflate进行压缩，建议升级到Python 3.14或更高版本以获得更好的压缩性能")
 
 def ZipDirectoryTree(ZipFileName: str, TargetDirectory: Path):
     with zipfile.ZipFile(ZipFileName, "w", Algorithms) as ZipFile:
@@ -87,6 +93,9 @@ def BackupCustomPath(PathListFile: Path):
     Paths: list[Path] = []
     with open(PathListFile, "rt", encoding="utf-8") as File:
         Paths = [Path(Line.strip()) for Line in File.readlines() if Line.strip() != "" and Line.strip().startswith("#") == False]
+    if len(Paths) == 0:
+        logging.info("自定义路径列表文件中没有有效条目，跳过自定义路径备份。")
+        return
     for BackupPath in Paths:
         if BackupPath.exists() == False:
             logging.warning(f"自定义路径 {BackupPath} 不存在，跳过对该条目的备份。")
