@@ -89,7 +89,7 @@ def ComputeSingleFileSHA256(FileName: Path, ResultFile: Path):
 
 def GenerateSHA256Checksum(ChecksumFileName: Path, Directory: Path = Path(".")):
     ChecksumWorker = ThreadPoolExecutor()
-    Files = [FileName for FileName in Directory.iterdir()]
+    Files = [File for File in Directory.iterdir() if File.is_file()]
     for FileName in Files:
         ChecksumWorker.submit(ComputeSingleFileSHA256, FileName, ChecksumFileName)
     ChecksumWorker.shutdown(wait=True)
