@@ -1,4 +1,4 @@
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import logging
 import os
@@ -11,7 +11,7 @@ import humanize
 
 from ProcessTimer import MeasureExecutionTime
 
-ZipWorker = ProcessPoolExecutor()
+ZipWorker = ThreadPoolExecutor()
 DontCompressFileExtensions = (".mp4", ".mkv", ".zip", "tar.gz")
 Algorithms: int = 0
 
