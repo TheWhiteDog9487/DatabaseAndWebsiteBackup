@@ -111,5 +111,8 @@ if all( S3_Config is not None for S3_Config in (R2_Endpoint, R2_Access_Key, R2_S
     UploadFile(ArchiveZipFileName)
     logging.info(f"已上传备份文件：{ArchiveZipFileName}，文件大小：{humanize.naturalsize(os.path.getsize(ArchiveZipFileName))}。")
     logging.info(f"当前存储桶内的所有文件总共占用了：{GetBucketTotalSize()[1]} 的空间。")
+else:
+    logging.warning("由于缺少访问存储桶所需的必要信息，故跳过上传备份")
+    logging.warning("具体情况请查看程序开始运行时打印的WARNING日志。")
 
 logging.info("备份过程全部完成。")
