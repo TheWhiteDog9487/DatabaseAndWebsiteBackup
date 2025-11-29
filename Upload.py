@@ -58,6 +58,8 @@ def OptimizeStorage(FileSize: int):
     assert S3 is not None
     assert R2_Bucket_Name is not None
     
+    if GetBucketTotalSize()[0] == 0:
+        return
     ObjectNameToLastModifiedDict = {
         Name: LastModifiedDate
         for Name, LastModifiedDate in sorted( (
