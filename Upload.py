@@ -34,7 +34,7 @@ S3: S3Client = boto3.client(
     endpoint_url=R2_Endpoint,
     region_name="auto")
 AllObjectsInBucket: Optional[ListObjectsV2OutputTypeDef] = None
-R2_Free_Space = 10 * (1024 ** 3) # 10GB
+R2_Free_Space = 10 * (1000 ** 3) # 10GB
 
 def GetBucketTotalSize() -> tuple[int, str]:
     assert S3 is not None
