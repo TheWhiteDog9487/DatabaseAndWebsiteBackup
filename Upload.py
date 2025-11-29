@@ -44,13 +44,14 @@ def GetBucketTotalSize() -> tuple[int, str]:
     Total_Size = 0
     if AllObjectsInBucket is None:
         AllObjectsInBucket = S3.list_objects_v2(Bucket=R2_Bucket_Name)
-        try:
-            AllObjectsInBucket["Contents"] # type: ignore
-        except KeyError:
+        if "Contents" not in AllObjectsInBucket:
             logging.info("存储桶内没有任何文件。")
             return 0, humanize.naturalsize(0)
-    for Object in AllObjectsInBucket["Contents"]: # type: ignore
-        Total_Size += Object["Size"] # type: ignore
+    try:
+        for Object in AllObjectsInBucket["Contents"]: # type: ignore
+            Total_Size += Object["Size"] # type: ignore
+    except KeyError:
+        return 0, humanize.naturalsize(0)
     Size_Humanize = humanize.naturalsize(Total_Size)
     return Total_Size, Size_Humanize
 
