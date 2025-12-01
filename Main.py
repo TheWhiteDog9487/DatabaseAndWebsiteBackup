@@ -12,6 +12,7 @@ from datetime import datetime
 import sys
 
 import humanize
+import humanize.i18n
 
 from Backup import BackupCertbot, BackupCustomPath, BackupDatabase, BackupWebsite, GenerateSHA256Checksum, LogDirectoryTree, PackAllFiles, ZipWorker
 from PrepareBackup import GetDirectorySize
@@ -34,7 +35,7 @@ ArchiveZipFileName: str = f"{CurrentTime}.zip"
 ChecksumFileName: Path = Path("sha256.txt")
 CustomPathListFileName: Path = Path("CustomPathList.txt")
 
-humanize.i18n.activate("zh_CN") # type: ignore
+humanize.i18n.activate("zh_CN")
 logging.info(f"MySQL保存命令：{MySQLDumpCommand}")
 logging.info(f"PostgreSQL保存命令：{PostgreSQLDumpCommand}")
 logging.info(f"网站根目录：{WebsiteLocation}")
