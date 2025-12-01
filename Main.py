@@ -13,6 +13,10 @@ import sys
 
 import humanize
 import humanize.i18n
+Original_naturalsize = humanize.naturalsize
+def New_naturalsize(value, binary=True, **kwargs):
+    return Original_naturalsize(value, binary=binary, **kwargs)
+humanize.naturalsize = New_naturalsize
 
 from Backup import BackupCertbot, BackupCustomPath, BackupDatabase, BackupWebsite, GenerateSHA256Checksum, LogDirectoryTree, PackAllFiles, ZipWorker
 from PrepareBackup import GetDirectorySize
