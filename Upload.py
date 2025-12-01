@@ -1,6 +1,8 @@
 import datetime
 import logging
 import os
+from threading import Lock, Thread
+import time
 from typing import Optional
 from urllib.parse import urlparse
 
@@ -102,6 +104,7 @@ def RunTask():
 def UploadFile(FilePath: str):
     global TaskHasEnded, FileSize
     assert S3 is not None
+    assert R2_Bucket_Name is not None
 
     logging.info(f"当前存储桶内的所有文件总共占用了：{GetBucketTotalSize()[1]} 的空间。")
     FileSize = os.path.getsize(FilePath)
