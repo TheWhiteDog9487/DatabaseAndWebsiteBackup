@@ -6,6 +6,7 @@ from urllib.parse import urlparse
 
 import boto3
 import humanize
+import schedule
 from types_boto3_s3 import S3Client
 from types_boto3_s3.type_defs import ListObjectsV2OutputTypeDef
 
@@ -35,6 +36,11 @@ S3: S3Client = boto3.client(
     region_name="auto")
 AllObjectsInBucket: Optional[ListObjectsV2OutputTypeDef] = None
 R2_Free_Space = 10 * (1000 ** 3) # 10GB
+BytesHasBeenTransferred: int = 0
+BytesHasBeenTransferredPast1Second: int = 0
+ProgressLock = Lock()
+TaskHasEnded = False
+FileSize: int 
 
 def GetBucketTotalSize() -> tuple[int, str]:
     assert S3 is not None
@@ -77,15 +83,36 @@ def OptimizeStorage(FileSize: int):
             if Object.get("Key") != DeleteFileName ]
         logging.warning("存储空间不足，已删除最旧的备份文件：{0}，最后修改时间：{1}。".format(DeleteFileName, DeleteFileLastModifiedDate.strftime("%Y-%m-%d %H:%M:%S")))
 
+def WriteProgress(TransferredBytes: int):
+    global BytesHasBeenTransferredPast1Second, BytesHasBeenTransferred, ProgressLock, FileSize
+    with ProgressLock:
+        BytesHasBeenTransferredPast1Second += TransferredBytes
+        BytesHasBeenTransferred = min(BytesHasBeenTransferred + TransferredBytes, FileSize)
+def ShowProgress():
+    global BytesHasBeenTransferredPast1Second, BytesHasBeenTransferred, ProgressLock
+    with ProgressLock:
+        logging.info(f"已上传：{humanize.naturalsize(BytesHasBeenTransferred)}，当前速度：{humanize.naturalsize(BytesHasBeenTransferredPast1Second)}/秒")
+        BytesHasBeenTransferredPast1Second = 0
+def RunTask():
+    while TaskHasEnded == False:
+        schedule.run_pending()
+        time.sleep(0.3)
+
 @MeasureExecutionTime("上传备份文件")
 def UploadFile(FilePath: str):
+    global TaskHasEnded, FileSize
     assert S3 is not None
 
     logging.info(f"当前存储桶内的所有文件总共占用了：{GetBucketTotalSize()[1]} 的空间。")
     FileSize = os.path.getsize(FilePath)
     OptimizeStorage(FileSize)
+    schedule.every(1).seconds.do(ShowProgress)
+    TaskThread = Thread(target=RunTask, daemon=True)
+    TaskThread.start()
     S3.upload_file(FilePath, 
-                   R2_Bucket_Name or "", 
+                   R2_Bucket_Name, 
                    os.path.basename(FilePath), 
-                   Callback= lambda TransferredBytes: 
-                        print(f"已上传 {humanize.naturalsize(TransferredBytes)}") )
+                   Callback=WriteProgress)
+    schedule.clear()
+    TaskHasEnded = True
+    TaskThread.join()
