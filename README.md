@@ -3,7 +3,7 @@
 # 简介
 备份本机的MySQL/MariaDB、PostgreSQL数据库和/var/www至当前目录的Backup文件夹下，并生成zip压缩包。
 
-# 特征
+# 功能特性
 - 支持MySQL/MariaDB和PostgreSQL数据库
 - 备份/var/www
 - 在备份文件内内嵌每个文件的sha256校验和以支持数据完整性校验
@@ -28,6 +28,13 @@
     - R2_Access_Key ：访问密钥ID
     - R2_Secret_Key ：机密访问密钥
     - R2_Bucket_Name ：存储桶名称
+
+# 运行参数
+- --skip-database-backup ：跳过数据库备份
+- --skip-website-backup ：跳过/var/www备份
+- --skip-certbot-backup ：跳过Certbot备份
+- --skip-custom-path-backup ：跳过自定义路径备份
+- --skip-upload ：跳过上传备份到S3兼容存储
 
 # 使用方法
 1. [安装uv](https://docs.astral.sh/uv/getting-started/installation/)

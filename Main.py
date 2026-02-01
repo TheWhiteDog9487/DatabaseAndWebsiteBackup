@@ -19,7 +19,7 @@ def New_naturalsize(value, binary=True, **kwargs):
 humanize.naturalsize = New_naturalsize
 
 from Backup import BackupCertbot, BackupCustomPath, BackupDatabase, BackupWebsite, GenerateSHA256Checksum, LogDirectoryTree, PackAllFiles, ZipWorker
-from PrepareBackup import GetDirectorySize
+from PrepareBackup import GetDirectorySize, ParsePassArguments
 from Upload import GetBucketTotalSize, R2_Access_Key, R2_Bucket_Name, R2_Endpoint, R2_Secret_Key, UploadFile
 
 CurrentTime: str = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
@@ -38,6 +38,7 @@ BackupDirectorySizeLimit: int = 20 * (1024 ** 3)  # 20 GiB
 ArchiveZipFileName: str = f"{CurrentTime}.zip"
 ChecksumFileName: Path = Path("sha256.txt")
 CustomPathListFileName: Path = Path("CustomPathList.txt")
+SkipDatabaseBackup, SkipWebsiteBackup, SkipCertbotBackup, SkipCustomPathBackup, SkipUpload =  ParsePassArguments()
 
 humanize.i18n.activate("zh_CN")
 logging.info(f"MySQL保存命令：{MySQLDumpCommand}")
@@ -76,23 +77,33 @@ os.mkdir(CurrentTime)
 os.chdir(CurrentTime)
 
 logging.info("开始数据库备份。")
-ZipWorker.submit(BackupDatabase, MySQLDumpCommand, MySQLDumpedFileName, MySQLDumpErrorLogFileName, "MySQL")
-ZipWorker.submit(BackupDatabase, PostgreSQLDumpCommand, PostgreSQLDumpedFileName, PostgreSQLDumpErrorLogFileName, "PostgreSQL", "postgres")
+if SkipDatabaseBackup == True:
+    logging.warning("由于传入了跳过数据库备份的参数，故跳过数据库备份。")
+else:
+    ZipWorker.submit(BackupDatabase, MySQLDumpCommand, MySQLDumpedFileName, MySQLDumpErrorLogFileName, "MySQL")
+    ZipWorker.submit(BackupDatabase, PostgreSQLDumpCommand, PostgreSQLDumpedFileName, PostgreSQLDumpErrorLogFileName, "PostgreSQL", "postgres")
 
-logging.info(f"开始备份网站根目录：{WebsiteLocation}")
-BackupWebsite(WebsiteLocation, WebsiteZipFileName)
+if SkipWebsiteBackup == True:
+    logging.warning("由于传入了跳过网站备份的参数，故跳过网站备份。")
+else:
+    logging.info(f"开始备份网站根目录：{WebsiteLocation}")
+    BackupWebsite(WebsiteLocation, WebsiteZipFileName)
 
-logging.info(f"开始备份Certbot目录：{CertbotLocation}")
-BackupCertbot(CertbotLocation, CertbotZipFileName)
+if SkipCertbotBackup == True:
+    logging.warning("由于传入了跳过Certbot备份的参数，故跳过Certbot备份。")
+else:
+    logging.info(f"开始备份Certbot目录：{CertbotLocation}")
+    BackupCertbot(CertbotLocation, CertbotZipFileName)
 
-logging.info("开始备份自定义路径。")
-BackupCustomPath(BackupRootDirectory.parent / CustomPathListFileName)
+if SkipCustomPathBackup == True:
+    logging.warning("由于传入了跳过自定义路径备份的参数，故跳过自定义路径备份。")
+else:
+    logging.info("开始备份自定义路径。")
+    BackupCustomPath(BackupRootDirectory.parent / CustomPathListFileName)
 
 ZipWorker.shutdown(wait=True)
-logging.info(f"网站根目录备份已保存：{WebsiteZipFileName}")
-logging.info(f"网站根目录备份文件大小：{humanize.naturalsize(os.path.getsize(WebsiteZipFileName))}")
-logging.info(f"Certbot目录备份已保存：{CertbotZipFileName}")
-logging.info(f"Certbot目录备份文件大小：{humanize.naturalsize(os.path.getsize(CertbotZipFileName))}")
+for File in os.listdir("."):
+    logging.info(f"{File} 的大小为：{ humanize.naturalsize( os.path.getsize(File) ) }")
 
 logging.info("开始计算备份文件的SHA256校验和。")
 GenerateSHA256Checksum(ChecksumFileName)
@@ -111,13 +122,16 @@ LogDirectoryTree(Path(CurrentTime))
 shutil.rmtree(CurrentTime)
 logging.info(f"已删除原始备份文件夹：{CurrentTime}")
 
-if all( S3_Config is not None for S3_Config in (R2_Endpoint, R2_Access_Key, R2_Secret_Key, R2_Bucket_Name) ) == True:
-    logging.info("开始上传压缩文件到R2存储桶。")
-    UploadFile(ArchiveZipFileName)
-    logging.info(f"已上传备份文件：{ArchiveZipFileName}，文件大小：{humanize.naturalsize(os.path.getsize(ArchiveZipFileName))}。")
-    logging.info(f"当前存储桶内的所有文件总共占用了：{GetBucketTotalSize()[1]} 的空间。")
+if SkipUpload == True:
+    logging.warning("由于传入了跳过上传备份的参数，故跳过上传备份。")
 else:
-    logging.warning("由于缺少访问存储桶所需的必要信息，故跳过上传备份")
-    logging.warning("具体情况请查看程序开始运行时打印的WARNING日志。")
+    if all( S3_Config is not None for S3_Config in (R2_Endpoint, R2_Access_Key, R2_Secret_Key, R2_Bucket_Name) ) == True:
+        logging.info("开始上传压缩文件到R2存储桶。")
+        UploadFile(ArchiveZipFileName)
+        logging.info(f"已上传备份文件：{ArchiveZipFileName}，文件大小：{humanize.naturalsize(os.path.getsize(ArchiveZipFileName))}。")
+        logging.info(f"当前存储桶内的所有文件总共占用了：{GetBucketTotalSize()[1]} 的空间。")
+    else:
+        logging.warning("由于缺少访问存储桶所需的必要信息，故跳过上传备份")
+        logging.warning("具体情况请查看程序开始运行时打印的WARNING日志。")
 
 logging.info("备份过程全部完成。")
