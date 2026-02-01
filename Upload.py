@@ -1,6 +1,7 @@
 import datetime
 import logging
 import os
+import sys
 from threading import Lock, Thread
 import time
 from typing import Optional
@@ -125,11 +126,16 @@ def UploadFile(FilePath: str):
         max_concurrency=32,
         multipart_chunksize=64 * 1024 * 1024,
         use_threads=True )
-    S3.upload_file(FilePath, 
-                   R2_Bucket_Name, 
-                   os.path.basename(FilePath),
-                   Config=CustomTransferConfig,
-                   Callback=WriteProgress)
-    schedule.clear()
-    TaskHasEnded = True
-    TaskThread.join()
+    try:
+        S3.upload_file(FilePath,
+                       R2_Bucket_Name,
+                       os.path.basename(FilePath),
+                       Config=CustomTransferConfig,
+                       Callback=WriteProgress)
+    except KeyboardInterrupt as e:
+        logging.error("检测到用户中断，上传任务被取消。")
+        sys.exit(0)
+    finally:
+        schedule.clear()
+        TaskHasEnded = True
+        TaskThread.join()
