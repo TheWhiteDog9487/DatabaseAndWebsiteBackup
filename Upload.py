@@ -10,6 +10,7 @@ import boto3
 import humanize
 import schedule
 from boto3.s3.transfer import TransferConfig
+from botocore.config import Config
 from types_boto3_s3 import S3Client
 from types_boto3_s3.type_defs import ListObjectsV2OutputTypeDef
 
@@ -31,11 +32,14 @@ R2_Bucket_Name = os.getenv("R2_Bucket_Name")
 if R2_Bucket_Name is None:
     logging.warning("R2_Bucket_Name没有作为环境变量被提供，这将导致备份文件不会被上传到云端。")
 
+BotoClientConfig = Config(
+    max_pool_connections=64)
 S3: S3Client = boto3.client(
     "s3",
     aws_access_key_id=R2_Access_Key,
     aws_secret_access_key=R2_Secret_Key,
     endpoint_url=R2_Endpoint,
+    config=BotoClientConfig,
     region_name="auto")
 AllObjectsInBucket: Optional[ListObjectsV2OutputTypeDef] = None
 R2_Free_Space = 10 * (1000 ** 3) # 10GB
