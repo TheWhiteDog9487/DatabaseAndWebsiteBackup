@@ -134,8 +134,22 @@ def UploadFile(FilePath: str):
                        Callback=WriteProgress)
     except KeyboardInterrupt as e:
         logging.error("检测到用户中断，上传任务被取消。")
+        CleanupFailedMultipartUploads(FilePath)
         sys.exit(0)
     finally:
         schedule.clear()
         TaskHasEnded = True
         TaskThread.join()
+
+def CleanupFailedMultipartUploads(FileName: str):
+    Response = S3.list_multipart_uploads(Bucket=R2_Bucket_Name)
+    if "Uploads" not in Response:
+        logging.info("没有未完成的分块上传任务需要清理。")
+        return
+    for UploadTask in Response["Uploads"]:
+        UploadId = UploadTask["UploadId"]
+        Key = UploadTask["Key"]
+        if Key != FileName:
+            continue
+        logging.info(f"中止未完成的分块上传任务，文件名：{Key}，上传ID：{UploadId}。")
+        S3.abort_multipart_upload(Bucket=R2_Bucket_Name, Key=Key, UploadId=UploadId)
