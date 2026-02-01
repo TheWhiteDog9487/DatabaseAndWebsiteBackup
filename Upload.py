@@ -9,6 +9,7 @@ from urllib.parse import urlparse
 import boto3
 import humanize
 import schedule
+from boto3.s3.transfer import TransferConfig
 from types_boto3_s3 import S3Client
 from types_boto3_s3.type_defs import ListObjectsV2OutputTypeDef
 
@@ -115,9 +116,15 @@ def UploadFile(FilePath: str):
     schedule.every(1).seconds.do(ShowProgress)
     TaskThread = Thread(target=RunTask, daemon=True)
     TaskThread.start()
+    CustomTransferConfig = TransferConfig(
+        multipart_threshold=64 * 1024 * 1024,
+        max_concurrency=32,
+        multipart_chunksize=64 * 1024 * 1024,
+        use_threads=True )
     S3.upload_file(FilePath, 
                    R2_Bucket_Name, 
-                   os.path.basename(FilePath), 
+                   os.path.basename(FilePath),
+                   Config=CustomTransferConfig,
                    Callback=WriteProgress)
     schedule.clear()
     TaskHasEnded = True
