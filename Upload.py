@@ -44,7 +44,7 @@ ProgressLock = Lock()
 TaskHasEnded = False
 FileSize: int 
 
-def GetBucketTotalSize() -> tuple[int, str]:
+def GetBucketTotalSize(ForceFetch: bool = False) -> tuple[int, str]:
     assert S3 is not None
     assert R2_Bucket_Name is not None
 
@@ -55,6 +55,8 @@ def GetBucketTotalSize() -> tuple[int, str]:
         if "Contents" not in AllObjectsInBucket:
             logging.info("存储桶内没有任何文件。")
             return 0, humanize.naturalsize(0)
+    if ForceFetch == True:
+        AllObjectsInBucket = S3.list_objects_v2(Bucket=R2_Bucket_Name)
     try:
         for Object in AllObjectsInBucket["Contents"]: # type: ignore
             Total_Size += Object["Size"] # type: ignore
@@ -84,6 +86,7 @@ def OptimizeStorage(FileSize: int):
             Object for Object in AllObjectsInBucket["Contents"] # type: ignore
             if Object.get("Key") != DeleteFileName ]
         logging.warning("存储空间不足，已删除最旧的备份文件：{0}，最后修改时间：{1}。".format(DeleteFileName, DeleteFileLastModifiedDate.strftime("%Y-%m-%d %H:%M:%S")))
+    GetBucketTotalSize(ForceFetch=True)
 
 def WriteProgress(TransferredBytes: int):
     global BytesHasBeenTransferredPast1Second, BytesHasBeenTransferred, ProgressLock, FileSize
