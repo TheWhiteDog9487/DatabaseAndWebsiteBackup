@@ -11,11 +11,14 @@ import shutil
 from datetime import datetime
 import sys
 
-import humanize
 import humanize.i18n
 Original_naturalsize = humanize.naturalsize
-def New_naturalsize(value, binary=True, **kwargs):
-    return Original_naturalsize(value, binary=binary, **kwargs)
+def New_naturalsize(
+    value: float | str,
+    binary: bool = True,
+    gnu: bool = False,
+    format: str = "%.1f"):
+    return Original_naturalsize(value=value, binary=binary, gnu=gnu, format=format)
 humanize.naturalsize = New_naturalsize
 
 from Backup import BackupCertbot, BackupCustomPath, BackupDatabase, BackupWebsite, GenerateSHA256Checksum, LogDirectoryTree, PackAllFiles, ZipWorker
