@@ -1,5 +1,6 @@
 import datetime
 import logging
+import math
 import os
 import sys
 from threading import Lock, Thread
@@ -9,6 +10,7 @@ from urllib.parse import urlparse
 
 import boto3
 import humanize
+import psutil
 import schedule
 from boto3.s3.transfer import TransferConfig
 from botocore.config import Config
@@ -33,8 +35,10 @@ R2_Bucket_Name = os.getenv("R2_Bucket_Name")
 if R2_Bucket_Name is None:
     logging.warning("R2_Bucket_Name没有作为环境变量被提供，这将导致备份文件不会被上传到云端。")
 
+MaxConcurrency: int = min((os.cpu_count() or 1) * 2, 64)
+ChunkSize: int = max(min(math.ceil(psutil.virtual_memory().available / (1024 ** 2) / MaxConcurrency / 10) * (1024 ** 2), 128 * 1024 * 1024), 8 * 1024 * 1024)
 BotoClientConfig = Config(
-    max_pool_connections=64)
+    max_pool_connections=MaxConcurrency)
 S3: S3Client = boto3.client(
     "s3",
     aws_access_key_id=R2_Access_Key,
@@ -48,7 +52,7 @@ BytesHasBeenTransferred: int = 0
 BytesHasBeenTransferredPast1Second: int = 0
 ProgressLock = Lock()
 TaskHasEnded = False
-FileSize: int 
+FileSize: int
 
 def GetBucketTotalSize(ForceFetch: bool = False) -> tuple[int, str]:
     assert S3 is not None
@@ -118,13 +122,14 @@ def UploadFile(FilePath: str):
     logging.info(f"当前存储桶内的所有文件总共占用了：{GetBucketTotalSize()[1]} 的空间。")
     FileSize = os.path.getsize(FilePath)
     OptimizeStorage(FileSize)
+    logging.info(f"上传并发数：{MaxConcurrency}，分块大小：{humanize.naturalsize(ChunkSize)}。")
     schedule.every(1).seconds.do(ShowProgress)
     TaskThread = Thread(target=RunTask, daemon=True)
     TaskThread.start()
     CustomTransferConfig = TransferConfig(
-        multipart_threshold=64 * 1024 * 1024,
-        max_concurrency=32,
-        multipart_chunksize=64 * 1024 * 1024,
+        multipart_threshold=ChunkSize,
+        max_concurrency=MaxConcurrency,
+        multipart_chunksize=ChunkSize,
         use_threads=True )
     try:
         S3.upload_file(FilePath,
