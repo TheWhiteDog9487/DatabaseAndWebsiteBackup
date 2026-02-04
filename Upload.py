@@ -36,7 +36,7 @@ if R2_Bucket_Name is None:
     logging.warning("R2_Bucket_Name没有作为环境变量被提供，这将导致备份文件不会被上传到云端。")
 
 MaxConcurrency: int = min((os.cpu_count() or 1) * 2, 64)
-ChunkSize: int = max(min(math.ceil(psutil.virtual_memory().available / (1024 ** 2) / MaxConcurrency / 10) * (1024 ** 2), 128 * 1024 * 1024), 8 * 1024 * 1024)
+ChunkSize: int = max(min(math.ceil(psutil.virtual_memory().available / (1024 ** 2) / MaxConcurrency / 10) * (1024 ** 2), 128 * 1024 * 1024), 16 * 1024 * 1024)
 BotoClientConfig = Config(
     max_pool_connections=MaxConcurrency)
 S3: S3Client = boto3.client(
