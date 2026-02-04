@@ -16,11 +16,6 @@
 - 详细的日志记录
 - 为Linux设计
 
-# 依赖项
-- [humanize](https://github.com/python-humanize/humanize)
-- [types-boto3](https://pypi.org/project/types-boto3)
-- [Boto3](https://github.com/boto/boto3)
-
 # 需要设置的环境变量
 - S3相关( 如果不需要使用S3自动上传的功能可以不管 )  
   如果这四个变量中的任意一个不存在，则自动跳过上传备份
